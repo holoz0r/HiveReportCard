@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Hive Blog Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial, sans-serif; max-width: 1000px; margin: 40px auto; padding: 20px; text-align: center; }
+input, button { padding: 10px; margin-top: 10px; box-sizing: border-box; }
+#results { margin-top: 20px; text-align: left; }
+.post { padding: 10px; border: 1px solid #ddd; margin-bottom: 10px; }
+.post-title { font-weight: bold; }
+.error { color: red; }
+.analytics-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
+.card { min-width: 150px; padding: 15px; border-radius: 8px; background: #f8f8f8; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.card h4 { margin: 0; font-size: 14px; color: #555; }
+.card p { font-size: 18px; margin: 5px 0 0; font-weight: bold; }
+.filters, .export-buttons { margin: 15px 0; display: none; }
+.filters button { margin-right: 8px; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
+.filters button.active { background: #007bff; color: white; border-color: #007bff; }
+.readability-table, .worddist-table { margin: 20px auto; border-collapse: collapse; width: 60%; }
+.readability-table th, .readability-table td, .worddist-table th, .worddist-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+.collapsible { margin-top: 20px; text-align: center; }
+.collapsible button { padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+.collapsible-content { display: block; margin-top: 15px; text-align: left; }
+.chart-container { width: 80%; height: 400px; margin: 25px auto; display:none; }
+#statusBar { font-weight: bold; margin-top: 10px; transition: opacity 2s ease; }
+#searchMessage { font-weight: bold; color: green; margin-top: 15px; display:none; }
+</style>
+</head>
+<body>
+<h1>Hive Report Card</h1>
+<p><a href="https://www.peakd.com/@holoz0r" target="blank">@holoz0r</a> created this tool to check up on the complexity of Author's content.</p><p> Your readability score is calculated using the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="blank">Flesch-Kincaid<a> methodology.</p><p> It only works for English. If you like this tool, you can support it by voting <a href="https://www.peakd.com/@holoz0r" target="blank">@holoz0r</a> for witness.</p>
+<h3><a href="https://vote.hive.uno/@holoz0r" target="blank">Support @holoz0r's witness</a></h3>
+<div id="statusBar"></div>
+
+<label for="username">Hive Username:</label>
+<input type="text" id="username" value="holoz0r" />
+<button id="lookupBtn" onclick="lookupPosts()">Lookup & Analyze</button>
+<div id="searchMessage">To search for another user, reload the page</div>
+
+<div class="analytics-cards" id="analyticsCards" style="display:none;"></div>
+
+<div class="filters" id="filters">
+  <button onclick="applyDateFilter('7d')">Last 7 Days</button>
+  <button onclick="applyDateFilter('30d')">Last 30 Days</button>
+  <button onclick="applyDateFilter('ytd')">Year to Date</button>
+  <button class="active" onclick="applyDateFilter('all')">All Time</button>
+</div>
+
+<div class="chart-container"><canvas id="wordChart"></canvas></div>
+
+<h3 style="display:none;" id="readabilityHeader">Readability Summary</h3>
+<div class="chart-container"><canvas id="readabilityPie"></canvas></div>
+<div id="readabilitySummary"></div>
+
+<h3 style="display:none;" id="wordDistHeader">Word Count Distribution</h3>
+<div class="chart-container"><canvas id="wordDistPie"></canvas></div>
+<div id="wordDistSummary"></div>
+
+<div class="export-buttons" id="exportButtons">
+  <button onclick="exportCSV()">Export CSV</button>
+  <button onclick="exportJSON()">Export JSON</button>
+</div>
+
+<div class="collapsible" id="collapsibleBtn" style="display:none;">
+  <button onclick="togglePosts()">Show/Hide Posts</button>
+  <div class="collapsible-content" id="results"></div>
+</div>
+
+<script>
+let allPosts=[], enrichedPosts=[], filteredPosts=[];
+let wordChart=null, readabilityPie=null, wordDistPie=null;
+let currentFilter='all';
+
+async function getAllAuthoredPosts(username){
+  const statusBar=document.getElementById('statusBar');
+  let posts=[], entryId=0, seen=new Set();
+  while(true){
+    statusBar.innerText=`Loading posts… (${posts.length} fetched so far)`;
+    const data=await new Promise((resolve,reject)=>{
+      hive.api.getBlog(username, entryId, 20, (err,res)=>err?reject(err):resolve(res));
+    });
+    if(!data || data.length===0) break;
+    data.forEach(p=>{
+      const c=p.comment;
+      if(c.author===username){
+        const key=`${c.author}/${c.permlink}`;
+        if(!seen.has(key)){seen.add(key); posts.push(p);}
+      }
+    });
+    if(data.length<20) break;
+    entryId=data[data.length-1].entry_id+1;
+  }
+  statusBar.innerText=`✅ Finished fetching ${posts.length} posts`;
+  setTimeout(()=>{statusBar.style.opacity=0;},5000);
+  return posts;
+}
+
+function getWordCount(text){return text?text.trim().split(/\s+/).length:0;}
+function getImageCount(text){return text?(text.match(/\.(jpg|jpeg|png|gif|webp)/gi)||[]).length:0;}
+
+function getReadability(text){
+  if(!text) return {score:0,grade:0,explainer:""};
+  const sentences=text.split(/[.!?]/).filter(s=>s.trim().length>0).length||1;
+  const words=getWordCount(text)||1;
+  const syllables=(text.toLowerCase().match(/[aeiouy]+/g)||[]).length;
+  const flesch=206.835-(1.015*(words/sentences))-(84.6*(syllables/words));
+  const grade=Math.round((0.39*(words/sentences))+(11.8*(syllables/words))-15.59);
+  const explainer=grade<=6?"Easy for elementary level":grade<=9?"Plain English, middle school":grade<=12?"Fairly difficult, high school":"Difficult, college level+";
+  return {score:flesch.toFixed(2),grade,explainer};
+}
+
+function enrichPosts(posts){
+  return posts.map(p=>{
+    const body=p.comment.body||"";
+    return {
+      author:p.comment.author,
+      title:p.comment.title,
+      permlink:p.comment.permlink,
+      created:p.comment.created,
+      body,
+      wordCount:getWordCount(body),
+      imageCount:getImageCount(body),
+      readability:getReadability(body)
+    };
+  }).sort((a,b)=>new Date(b.created)-new Date(a.created));
+}
+
+function calculateAggregate(posts){
+  const words=posts.map(p=>p.wordCount);
+  const images=posts.map(p=>p.imageCount);
+  const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2):0;
+  return {
+    postCount:posts.length,
+    totalWords:words.reduce((a,b)=>a+b,0),
+    totalImages:images.reduce((a,b)=>a+b,0),
+    avgWords:avg(words),
+    avgImages:avg(images),
+    avgWordsPerImage:(words.reduce((a,b)=>a+b,0)/(images.reduce((a,b)=>a+b,0)||1)).toFixed(2),
+    firstPost:posts.length?new Date(posts[posts.length-1].created).toLocaleDateString():"-",
+    recentPost:posts.length?new Date(posts[0].created).toLocaleDateString():"-"
+  };
+}
+
+async function lookupPosts(){
+  const username=document.getElementById('username').value.trim().toLowerCase();
+  if(!username){alert("Enter Hive username");return;}
+  document.getElementById('username').disabled=true;
+  document.getElementById('lookupBtn').disabled=true;
+
+  document.getElementById('analyticsCards').style.display='none';
+  document.getElementById('filters').style.display='none';
+  document.getElementById('exportButtons').style.display='none';
+  document.getElementById('collapsibleBtn').style.display='none';
+  document.getElementById('readabilityHeader').style.display='none';
+  document.getElementById('wordDistHeader').style.display='none';
+  document.querySelectorAll('.chart-container').forEach(c=>c.style.display='none');
+  document.getElementById('searchMessage').style.display='none';
+
+  allPosts=await getAllAuthoredPosts(username);
+  enrichedPosts=enrichPosts(allPosts);
+  filteredPosts=enrichPosts(allPosts);
+
+  renderAnalytics();
+
+  document.getElementById('analyticsCards').style.display='flex';
+  document.getElementById('filters').style.display='block';
+  document.getElementById('exportButtons').style.display='block';
+  document.getElementById('collapsibleBtn').style.display='block';
+  document.getElementById('readabilityHeader').style.display='block';
+  document.getElementById('wordDistHeader').style.display='block';
+  document.querySelectorAll('.chart-container').forEach(c=>c.style.display='block');
+  document.getElementById('searchMessage').style.display='block';
+}
+
+function applyDateFilter(type){
+  currentFilter=type;
+  document.querySelectorAll('.filters button').forEach(btn=>btn.classList.remove('active'));
+  event.target.classList.add('active');
+  const now=new Date();
+  filteredPosts = enrichedPosts.filter(p=>{
+    const postDate=new Date(p.created);
+    if(type==='7d') return postDate >= new Date(now-7*864e5);
+    if(type==='30d') return postDate >= new Date(now-30*864e5);
+    if(type==='ytd') return postDate.getFullYear()===now.getFullYear();
+    return true;
+  });
+  renderAnalytics();
+}
+
+function renderAnalytics(){
+  if(!filteredPosts || filteredPosts.length===0){
+    document.getElementById('analyticsCards').innerHTML="";
+    document.getElementById('results').innerHTML="<p>No posts for this filter.</p>";
+    return;
+  }
+  const agg=calculateAggregate(filteredPosts);
+  const cardsDiv=document.getElementById('analyticsCards');
+  cardsDiv.innerHTML=`
+    <div class="card"><h4>Post Count</h4><p>${agg.postCount}</p></div>
+    <div class="card"><h4>First Post</h4><p>${agg.firstPost}</p></div>
+    <div class="card"><h4>Most Recent Post</h4><p>${agg.recentPost}</p></div>
+    <div class="card"><h4>Total Words</h4><p>${agg.totalWords}</p></div>
+    <div class="card"><h4>Total Images</h4><p>${agg.totalImages}</p></div>
+    <div class="card"><h4>Avg Words / Post</h4><p>${agg.avgWords}</p></div>
+    <div class="card"><h4>Avg Images</h4><p>${agg.avgImages}</p></div>
+  `;
+  renderWordChart(filteredPosts, agg);
+  renderReadabilitySummary(filteredPosts);
+  renderWordDistSummary(filteredPosts);
+  renderPosts(filteredPosts);
+}
+
+function renderWordChart(posts, agg){
+  const ctx=document.getElementById('wordChart').getContext('2d');
+  const labels=posts.map(p=>new Date(p.created).toLocaleDateString());
+  const data=posts.map(p=>p.wordCount);
+  const avg=Math.round(posts.reduce((a,b)=>a+b.wordCount,0)/posts.length);
+  if(wordChart) wordChart.destroy();
+  wordChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{label:'Word Count',data,backgroundColor:'rgba(0,123,255,0.5)'},
+      {label:'Average Words',data:Array(data.length).fill(avg),type:'line',borderColor:'red',fill:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}}}
+  });
+  document.querySelector('#wordChart').parentElement.style.display='block';
+}
+
+function renderReadabilitySummary(posts){
+  const summary={};
+  posts.forEach(p=>{
+    const lvl=p.readability.explainer;
+    summary[lvl]=(summary[lvl]||0)+1;
+  });
+  let table="<table class='readability-table'><tr><th>Readability Level</th><th>Number of Posts</th><th>% of Posts</th></tr>";
+  const total=posts.length;
+  Object.keys(summary).forEach(k=>{
+    table+=`<tr><td>${k}</td><td>${summary[k]}</td><td>${((summary[k]/total)*100).toFixed(1)}%</td></tr>`;
+  });
+  table+="</table>";
+  document.getElementById('readabilitySummary').innerHTML=table;
+
+  const ctx=document.getElementById('readabilityPie').getContext('2d');
+  if(readabilityPie) readabilityPie.destroy();
+  readabilityPie=new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:Object.keys(summary),
+      datasets:[{data:Object.values(summary),backgroundColor:['#007bff','#28a745','#ffc107','#dc3545']}]
+    },
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+  document.querySelector('#readabilityPie').parentElement.style.display='block';
+}
+
+function renderWordDistSummary(posts){
+  const dist={"<50":0,"<250":0,"<500":0,"<1000":0,"<2000":0,">2000":0};
+  posts.forEach(p=>{
+    const w=p.wordCount;
+    if(w<50) dist["<50"]++;
+    else if(w<250) dist["<250"]++;
+    else if(w<500) dist["<500"]++;
+    else if(w<1000) dist["<1000"]++;
+    else if(w<2000) dist["<2000"]++;
+    else dist[">2000"]++;
+  });
+  let table="<table class='worddist-table'><tr><th>Word Count Range</th><th>Posts</th><th>% of Posts</th></tr>";
+  const total=posts.length;
+  Object.keys(dist).forEach(k=>{
+    table+=`<tr><td>${k}</td><td>${dist[k]}</td><td>${((dist[k]/total)*100).toFixed(1)}%</td></tr>`;
+  });
+  table+="</table>";
+  document.getElementById('wordDistSummary').innerHTML=table;
+
+  const ctx=document.getElementById('wordDistPie').getContext('2d');
+  if(wordDistPie) wordDistPie.destroy();
+  wordDistPie=new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:Object.keys(dist),
+      datasets:[{data:Object.values(dist),backgroundColor:['#007bff','#28a745','#ffc107','#dc3545','#6f42c1','#20c997']}]
+    },
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+  document.querySelector('#wordDistPie').parentElement.style.display='block';
+}
+
+function renderPosts(posts){
+  const div=document.getElementById('results');
+  div.innerHTML="";
+  posts.forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='post';
+    el.innerHTML=`<div class="post-title">${i+1}. ${p.title}</div>
+    <div><a href="https://peakd.com/@${p.author}/${p.permlink}" target="_blank">View Post</a></div>
+    <div><small>Posted by @${p.author} on ${new Date(p.created).toLocaleString()}</small></div>
+    <div><strong>Word Count:</strong> ${p.wordCount}</div>
+    <div><strong>Image Count:</strong> ${p.imageCount}</div>
+    <div><strong>Readability Score:</strong> ${p.readability.score} | Grade Level: ${p.readability.grade} | ${p.readability.explainer}</div>`;
+    div.appendChild(el);
+  });
+  document.getElementById('collapsibleBtn').style.display='block';
+}
+
+function togglePosts(){
+  const content=document.getElementById('results');
+  content.style.display=(content.style.display==='none')?'block':'none';
+}
+
+function downloadFile(filename,content){
+  const blob=new Blob([content],{type:'text/plain'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download=filename;
+  link.click();
+}
+
+function exportCSV(){
+  let csv="Author,Title,Date,Content,Word Count,Image Count\n";
+  filteredPosts.forEach(p=>{
+    const row=[p.author,`"${p.title}"`,p.created,`"${p.body.replace(/"/g,'""')}"`,p.wordCount,p.imageCount];
+    csv+=row.join(",")+"\n";
+  });
+  downloadFile('hive_posts.csv',csv);
+}
+
+function exportJSON(){
+  downloadFile('hive_posts.json',JSON.stringify(filteredPosts,null,2));
+}
+</script>
+</body>
+</html>

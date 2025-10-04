@@ -553,6 +553,7 @@ async function fetchAuthoredPosts(username, mode) {
       const c = item.comment;
       if (!c) continue;
       if (c.author !== username) continue;
+      if (c.permlink && /hive-\d{6}$/.test(c.permlink)) continue;
       const key = `${c.author}/${c.permlink}`;
       if (seen.has(key)) continue;
       seen.add(key);

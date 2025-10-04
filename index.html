@@ -567,18 +567,54 @@ async function fetchAuthoredPosts(username, mode) {
 
   return collected;
 }
-
 /* ------------------------
-   Enrichment
+   Enrichment (word/image/readability)
    ------------------------ */
+function cleanTextForReadability(text) {
+  if (!text) return '';
+  
+  let cleaned = text;
+  
+  // Remove markdown image syntax: ![alt text](url)
+  cleaned = cleaned.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '');
+  
+  // Remove standalone URLs (http, https, www)
+  cleaned = cleaned.replace(/https?:\/\/[^\s]+/g, '');
+  cleaned = cleaned.replace(/www\.[^\s]+/g, '');
+  
+  // Extract link text from markdown links [text](url), keep only the text
+  cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+  
+  // Remove HTML tags
+  cleaned = cleaned.replace(/<[^>]*>/g, ' ');
+  
+  // Remove markdown headers (##, ###, etc)
+  cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
+  
+  // Remove markdown bold/italic markers but keep the text
+  cleaned = cleaned.replace(/(\*\*|__)(.*?)\1/g, '$2');
+  cleaned = cleaned.replace(/(\*|_)(.*?)\1/g, '$2');
+  
+  // Remove code blocks
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+  cleaned = cleaned.replace(/`[^`]+`/g, '');
+  
+  // Remove excess whitespace and normalize
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  return cleaned;
+}
+
 function getWordCount(text) {
   if (!text) return 0;
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
+
 function getImageCount(text) {
   if (!text) return 0;
   return (text.match(/\.(jpg|jpeg|png|gif|webp)/gi) || []).length;
 }
+
 function countSyllablesInWord(w) {
   w = (w || '').toLowerCase().replace(/[^a-z]/g, '');
   if (!w) return 0;
@@ -587,6 +623,7 @@ function countSyllablesInWord(w) {
   const m = w.match(/[aeiouy]{1,2}/g);
   return m ? m.length : 1;
 }
+
 function countSyllables(text) {
   if (!text) return 1;
   const words = text.toLowerCase().split(/\s+/).filter(Boolean);
@@ -595,11 +632,13 @@ function countSyllables(text) {
   for (const w of words) s += countSyllablesInWord(w);
   return Math.max(1, s);
 }
+
 function countSentences(text) {
   if (!text) return 1;
   const parts = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
   return Math.max(1, parts.length);
 }
+
 function getReadability(text) {
   if (!text) return { score: 0, grade: 0, explainer: 'Professional' };
   const words = Math.max(1, getWordCount(text));
@@ -618,9 +657,10 @@ function enrichPosts(posts) {
   const out = posts.map(item => {
     const c = item.comment || {};
     const body = c.body || '';
-    const wc = getWordCount(body);
+    const cleanedBody = cleanTextForReadability(body);
+    const wc = getWordCount(cleanedBody);
     const ic = getImageCount(body);
-    const r = getReadability(body);
+    const r = getReadability(cleanedBody);
     const created = c.created || item.created || new Date().toISOString();
     return {
       author: c.author,
@@ -638,7 +678,6 @@ function enrichPosts(posts) {
   out.sort((a,b) => new Date(b.created) - new Date(a.created));
   return out;
 }
-
 /* ------------------------
    Filters and rendering
    ------------------------ */
@@ -695,7 +734,8 @@ function renderAll() {
   document.querySelectorAll('.filter-level').forEach(b => b.classList.remove('active'));
   const allBtn = document.querySelector('.filter-level[data-level="all"]');
   if (allBtn) allBtn.classList.add('active');
-  renderPostsList(filtered);
+ displayedPosts = filtered.slice();
+ renderPostsList(displayedPosts);
 
   document.getElementById('exportBtns').classList.remove('hidden');
 }

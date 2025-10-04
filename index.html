@@ -1,337 +1,1355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Hive Blog Analytics</title>
+<meta charset="utf-8" />
+<title>Hive Report Card - Readability, Wordcount and more by @holoz0r</title>
+
+<!-- Hive + Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-body { font-family: Arial, sans-serif; max-width: 1000px; margin: 40px auto; padding: 20px; text-align: center; }
-input, button { padding: 10px; margin-top: 10px; box-sizing: border-box; }
-#results { margin-top: 20px; text-align: left; }
-.post { padding: 10px; border: 1px solid #ddd; margin-bottom: 10px; }
-.post-title { font-weight: bold; }
-.error { color: red; }
-.analytics-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
-.card { min-width: 150px; padding: 15px; border-radius: 8px; background: #f8f8f8; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.card h4 { margin: 0; font-size: 14px; color: #555; }
-.card p { font-size: 18px; margin: 5px 0 0; font-weight: bold; }
-.filters, .export-buttons { margin: 15px 0; display: none; }
-.filters button { margin-right: 8px; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; }
-.filters button.active { background: #007bff; color: white; border-color: #007bff; }
-.readability-table, .worddist-table { margin: 20px auto; border-collapse: collapse; width: 60%; }
-.readability-table th, .readability-table td, .worddist-table th, .worddist-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-.collapsible { margin-top: 20px; text-align: center; }
-.collapsible button { padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-.collapsible-content { display: block; margin-top: 15px; text-align: left; }
-.chart-container { width: 80%; height: 400px; margin: 25px auto; display:none; }
-#statusBar { font-weight: bold; margin-top: 10px; transition: opacity 2s ease; }
-#searchMessage { font-weight: bold; color: green; margin-top: 15px; display:none; }
+
+* { box-sizing: border-box; }
+html,body { height: 100%; }
+body {
+  margin: 0;
+  padding: 24px;
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  background: #0a0e1a;
+  color: #f0f4f8;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 18px;
+}
+
+h1,h2,h3 { margin: 8px 0; text-align: center; line-height:1.15; color:#ffffff; }
+h1 { font-size: 2.2rem; }
+h3 { font-size: 1.3rem; }
+p { color: #d4dde8; margin: 6px 0; text-align:center; }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { color: #93c5fd; text-decoration: underline; }
+
+.top-box {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 18px auto 4px;
+  max-width: fit-content;
+}
+.controls label { display:block; font-size:13px; color:#d4dde8; margin-bottom:6px; font-weight: 600; }
+.controls input[type="text"]{
+  min-width: 240px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #1e293b;
+  color: #f0f4f8;
+  outline: none;
+  font-size: 14px;
+}
+.controls input[type="text"]:focus {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  border-color: #60a5fa;
+}
+
+button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #1e293b;
+  color: #f0f4f8;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-size: 14px;
+}
+button:hover { 
+  transform: translateY(-1px); 
+  background: #334155;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+button.primary {
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #3b82f6;
+}
+button.primary:hover {
+  background: #3b82f6;
+}
+
+#statusBar { margin-left: 6px; color: #93c5fd; font-weight:700; transition:opacity .6s; }
+#searchMessage { color:#86efac; font-weight:700; margin-left:8px; }
+
+.filters { display:none; gap:8px; margin-top:12px; justify-content:center; flex-wrap: wrap; }
+.filters button {
+  background:#1e293b; 
+  color:#d4dde8; 
+  border:1px solid rgba(148, 163, 184, 0.2);
+  padding:8px 12px; 
+  border-radius:8px;
+}
+.filters button.active { 
+  background: #2563eb; 
+  color:#ffffff; 
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.card-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  margin-top: 16px;
+}
+@media (max-width:1100px) { .card-grid { grid-template-columns: repeat(3, minmax(220px,1fr)); } }
+@media (max-width:820px)  { .card-grid { grid-template-columns: repeat(2, minmax(200px,1fr)); } }
+@media (max-width:520px)  { .card-grid { grid-template-columns: repeat(1, 1fr); } }
+
+.card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 16px;
+  border-radius: 12px;
+  min-height: 96px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.card h4 { color:#cbd5e1; font-size:13px; margin:0; text-transform: uppercase; letter-spacing: 0.5px; }
+.card p  { color:#ffffff; font-size:20px; font-weight:800; margin:0; }
+
+.charts {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width:960px) { .charts { grid-template-columns: 1fr; } }
+
+.chart-card {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height: 460px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.chart-card.chart-full {
+  grid-column: 1 / 3;
+}
+@media (max-width:960px) { 
+  .chart-card.chart-full {
+    grid-column: 1;
+  }
+}
+
+.canvas-wrap {
+  width:100%;
+  height:360px;
+  position:relative;
+  border-radius:8px;
+  overflow:hidden;
+  background: rgba(15, 23, 42, 0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.canvas-wrap canvas, canvas {
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:100%;
+}
+
+.center { display:flex; justify-content:center; }
+.center button { margin-top:4px; }
+
+.pie-block { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding-top:8px; }
+.pie-block canvas { max-width:360px; max-height:260px; border-radius:8px; background:transparent; }
+
+.table-wrap { display:flex; justify-content:center; width:100%; }
+.table-wrap table {
+  border-collapse: collapse;
+  width: 360px;
+  max-width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  color: #f0f4f8;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+.table-wrap th { 
+  background: rgba(30, 41, 59, 0.8); 
+  padding:12px; 
+  font-weight:700; 
+  color:#ffffff;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.table-wrap td { 
+  padding:10px; 
+  border-top: 1px solid rgba(148, 163, 184, 0.1); 
+  font-size: 14px;
+}
+
+.heatmap { 
+  display:flex; 
+  gap:10px; 
+  justify-content:center; 
+  align-items:flex-start; 
+  padding:8px 0; 
+  flex-wrap: wrap; 
+}
+.heat-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.heat-label { 
+  color:#cbd5e1; 
+  font-size:12px; 
+  margin-bottom:6px; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+  text-align: center;
+  min-width: 50px;
+}
+.heat-cell {
+  width:50px; 
+  height:50px; 
+  border-radius:8px; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  color:#fff; 
+  font-weight:700;
+  transition: all .12s ease;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  font-size: 16px;
+}
+.heat-cell:hover { 
+  transform: translateY(-3px) scale(1.05); 
+  cursor:pointer; 
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4); 
+}
+
+.heat-cell.small {
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
+}
+.heat-label.small {
+  font-size: 10px;
+  min-width: 38px;
+}
+
+#posts { margin-top:20px; }
+.post {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding:14px; 
+  border-radius:10px; 
+  margin-bottom:10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.post .small { color:#cbd5e1; font-size:13px; }
+
+.export-row { 
+  display:flex; 
+  justify-content:space-between; 
+  align-items: center;
+  gap:12px; 
+  margin-top:10px;
+  flex-wrap: wrap;
+}
+.export-row button { 
+  background:#2563eb; 
+  color:#fff; 
+  border-radius:8px; 
+  padding:8px 12px; 
+  border: 1px solid #3b82f6; 
+}
+
+.post-filters {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.filter-level {
+  background: #1e293b !important;
+  color: #d4dde8 !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+}
+.filter-level.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.hidden { display:none !important; }
+.small { font-size:13px; color:#cbd5e1; }
+.center-text { text-align:center; }
+
+html { scroll-behavior: smooth; }
+
 </style>
 </head>
 <body>
-<h1>Hive Report Card</h1>
-<p><a href="https://www.peakd.com/@holoz0r" target="blank">@holoz0r</a> created this tool to check up on the complexity of Author's content.</p><p> Your readability score is calculated using the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="blank">Flesch-Kincaid<a> methodology.</p><p> It only works for English. If you like this tool, you can support it by voting <a href="https://www.peakd.com/@holoz0r" target="blank">@holoz0r</a> for witness.</p>
-<h3><a href="https://vote.hive.uno/@holoz0r" target="blank">Support @holoz0r's witness</a></h3>
-<div id="statusBar"></div>
+  <div class="container">
+    <div class="top">
+      <h1>Hive Report Card</h1>
+      <p><a href="https://www.peakd.com/@holoz0r" target="_blank">@holoz0r</a> created this tool to analyse the complexity of a hive user's content. It also shows how their writing style or length may change over time.</p><br>
+      <p>The readability score is calculated using the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="_blank">Flesch-Kincaid</a> methodology.</p><br>
+      <p>This tool is created as a replacement to monthly reporting which showed similar data. It polls the HIVE API live, so no need to publish something to the chain each month, just come back to the tool and check.</p><br/></br>
+      <h3><a href="https://vote.hive.uno/@holoz0r" target="_blank">If you like this, Please Support @holoz0r's witness</a></h3>
+    </div><br>
+<hr>
+    <div class="controls" style="margin-top:12px;">
+      <div>
+      <br>
+        <label for="username">Enter a HIVE Account Name:</label>
+        <input id="username" type="text" value="holoz0r" />
+<br>
+<br>
+        <button id="btnAll" class="primary" onclick="startFetch('all')">Fetch All Posts</button>
+        <button id="btn100" onclick="startFetch('100')">Fetch Last 100</button>
+            <div id="statusBar"></div>
+      <br><br>
+      <div id="searchMessage" class="small hidden">To perform another search, reload the page</div>
+    </div>
+      </div>
+<hr>
+  <br>
+      </div>
+    <div class="filters" id="filters">
+      <button data-range="7d" onclick="applyDateFilter('7d', this)">Last 7 Days</button>
+      <button data-range="30d" onclick="applyDateFilter('30d', this)">Last 30 Days</button>
+      <button data-range="ytd" onclick="applyDateFilter('ytd', this)">Year to Date</button>
+      <button data-range="all" class="active" onclick="applyDateFilter('all', this)">All Time</button>
+    </div>
 
-<label for="username">Hive Username:</label>
-<input type="text" id="username" value="holoz0r" />
-<button id="lookupBtn" onclick="lookupPosts()">Lookup & Analyze</button>
-<div id="searchMessage">To search for another user, reload the page</div>
+    <div id="resultsArea" class="hidden">
+      <div class="card-grid" id="cardGrid"></div>
 
-<div class="analytics-cards" id="analyticsCards" style="display:none;"></div>
+      <div class="charts">
+        <div class="chart-card chart-full">
+          <h3>Words and Images Per Post</h3>
+          <div class="canvas-wrap"><canvas id="chartPerPost"></canvas></div>
+          <div class="center"><button onclick="exportChartPNG(chartPerPost)">Export Chart to PNG</button></div>
+        </div>
 
-<div class="filters" id="filters">
-  <button onclick="applyDateFilter('7d')">Last 7 Days</button>
-  <button onclick="applyDateFilter('30d')">Last 30 Days</button>
-  <button onclick="applyDateFilter('ytd')">Year to Date</button>
-  <button class="active" onclick="applyDateFilter('all')">All Time</button>
-</div>
+        <div class="chart-card">
+          <h3>Posts by Day of Week</h3>
+          <div id="heatmap" class="heatmap"></div>
+        </div>
 
-<div class="chart-container"><canvas id="wordChart"></canvas></div>
+        <div class="chart-card">
+          <h3>Posts by Month of Year</h3>
+          <div id="monthmap" class="heatmap"></div>
+        </div>
 
-<h3 style="display:none;" id="readabilityHeader">Readability Summary</h3>
-<div class="chart-container"><canvas id="readabilityPie"></canvas></div>
-<div id="readabilitySummary"></div>
+        <div class="chart-card">
+          <h3>Posts by Year</h3>
+          <div id="yearmap" class="heatmap"></div>
+        </div>
 
-<h3 style="display:none;" id="wordDistHeader">Word Count Distribution</h3>
-<div class="chart-container"><canvas id="wordDistPie"></canvas></div>
-<div id="wordDistSummary"></div>
+        <div class="chart-card">
+          <h3>Posts by Hour of Day</h3>
+          <div id="hourmap" class="heatmap"></div>
+        </div>
 
-<div class="export-buttons" id="exportButtons">
-  <button onclick="exportCSV()">Export CSV</button>
-  <button onclick="exportJSON()">Export JSON</button>
-</div>
+        <div class="chart-card chart-full">
+          <h3>Words Published Over Time</h3>
+          <div class="canvas-wrap"><canvas id="chartCumulative"></canvas></div>
+          <div class="center"><button onclick="exportChartPNG(chartCumulative)">Export Chart to PNG</button></div>
+        </div>
 
-<div class="collapsible" id="collapsibleBtn" style="display:none;">
-  <button onclick="togglePosts()">Show/Hide Posts</button>
-  <div class="collapsible-content" id="results"></div>
-</div>
+        <div class="chart-card chart-full">
+          <h3>Readability Over Time – click a data point to open the post</h3>
+          <div class="canvas-wrap"><canvas id="chartReadability"></canvas></div>
+          <div class="center"><button onclick="exportChartPNG(chartReadability)">Export Chart to PNG</button></div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Readability Distribution</h3>
+          <div class="pie-block">
+            <canvas id="pieReadability" width="360" height="220"></canvas>
+            <div id="readabilityTable" class="table-wrap"></div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Word Count Distribution</h3>
+          <div class="pie-block">
+            <canvas id="pieWordDist" width="360" height="220"></canvas>
+            <div id="wordDistTable" class="table-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="export-row">
+        <div class="post-filters">
+          <label style="font-weight: 600; color: #cbd5e1; margin-right: 8px;">Filter by Level:</label>
+          <button class="filter-level active" data-level="all" onclick="filterPostsByLevel('all', this)">All</button>
+          <button class="filter-level" data-level="Elementary" onclick="filterPostsByLevel('Elementary', this)">Elementary</button>
+          <button class="filter-level" data-level="Middle School" onclick="filterPostsByLevel('Middle School', this)">Middle School</button>
+          <button class="filter-level" data-level="High School" onclick="filterPostsByLevel('High School', this)">High School</button>
+          <button class="filter-level" data-level="College" onclick="filterPostsByLevel('College', this)">College</button>
+          <button class="filter-level" data-level="University" onclick="filterPostsByLevel('University', this)">University</button>
+          <button class="filter-level" data-level="Post-Graduate" onclick="filterPostsByLevel('Post-Graduate', this)">Post-Graduate</button>
+          <button class="filter-level" data-level="Professional" onclick="filterPostsByLevel('Professional', this)">Professional</button>
+        </div>
+        <div id="exportBtns" class="hidden">
+          <button onclick="exportCSV()">Export CSV</button>
+          <button onclick="exportJSON()">Export JSON</button>
+        </div>
+      </div>
+
+      <div id="posts" class="posts">
+        <h3>Posts (newest → oldest)</h3>
+        <div id="postsList"></div>
+      </div>
+    </div>
+  </div>
 
 <script>
-let allPosts=[], enrichedPosts=[], filteredPosts=[];
-let wordChart=null, readabilityPie=null, wordDistPie=null;
-let currentFilter='all';
+/* ------------------------
+   State
+   ------------------------ */
+let rawPosts = [];
+let enriched = [];
+let filtered = [];
+let displayedPosts = [];
+let currentRange = 'all';
+let currentLevelFilter = 'all';
 
-async function getAllAuthoredPosts(username){
-  const statusBar=document.getElementById('statusBar');
-  let posts=[], entryId=0, seen=new Set();
-  while(true){
-    statusBar.innerText=`Loading posts… (${posts.length} fetched so far)`;
-    const data=await new Promise((resolve,reject)=>{
-      hive.api.getBlog(username, entryId, 20, (err,res)=>err?reject(err):resolve(res));
-    });
-    if(!data || data.length===0) break;
-    data.forEach(p=>{
-      const c=p.comment;
-      if(c.author===username){
-        const key=`${c.author}/${c.permlink}`;
-        if(!seen.has(key)){seen.add(key); posts.push(p);}
-      }
-    });
-    if(data.length<20) break;
-    entryId=data[data.length-1].entry_id+1;
+let chartPerPost = null;
+let chartCumulative = null;
+let chartReadability = null;
+let pieReadability = null;
+let pieWordDist = null;
+
+/* ------------------------
+   Helpers
+   ------------------------ */
+function setStatus(s) {
+  const el = document.getElementById('statusBar');
+  el.style.opacity = 1;
+  el.innerText = s || '';
+}
+function fadeStatus(ms = 4000) {
+  setTimeout(()=> { const el = document.getElementById('statusBar'); el.style.opacity = 0; }, ms);
+}
+function isoDay(d) { return (new Date(d)).toISOString().slice(0,10); }
+function formatDate(d) { return d ? (new Date(d)).toLocaleDateString() : '-'; }
+function escapeCsv(v) { return `"${(v||'').toString().replace(/"/g,'""')}"`; }
+
+/* Improved readability grouping with educational levels */
+function groupReadability(score) {
+  if (score >= 90) return 'Elementary';
+  if (score >= 80) return 'Middle School';
+  if (score >= 70) return 'High School';
+  if (score >= 60) return 'College';
+  if (score >= 50) return 'University';
+  if (score >= 30) return 'Post-Graduate';
+  return 'Professional';
+}
+
+/* Get explainer based on grade level - MUST match groupReadability */
+function getExplainerFromGrade(grade) {
+  // This should match the groupReadability logic based on Flesch score
+  // Since we calculate both, we'll use grade as a backup
+  if (grade <= 6) return 'Elementary';
+  if (grade <= 8) return 'Middle School';
+  if (grade <= 12) return 'High School';
+  if (grade <= 16) return 'College';
+  if (grade <= 18) return 'University';
+  return 'Post-Graduate';
+}
+
+/* ------------------------
+   Fetch / pagination / dedupe
+   ------------------------ */
+async function startFetch(mode) {
+  const username = document.getElementById('username').value.trim().toLowerCase();
+  if (!username) { alert('Please enter a Hive username'); return; }
+
+  document.getElementById('username').disabled = true;
+  document.getElementById('btnAll').disabled = true;
+  document.getElementById('btn100').disabled = true;
+
+  document.getElementById('resultsArea').classList.add('hidden');
+  document.getElementById('filters').style.display = 'none';
+  document.getElementById('exportBtns').classList.add('hidden');
+  document.getElementById('searchMessage').classList.remove('hidden');
+
+  setStatus('Starting fetch...');
+  try {
+    rawPosts = await fetchAuthoredPosts(username, mode);
+  } catch (e) {
+    console.error(e);
+    alert('Failed to fetch posts: ' + (e && e.message ? e.message : e));
+    return;
   }
-  statusBar.innerText=`✅ Finished fetching ${posts.length} posts`;
-  setTimeout(()=>{statusBar.style.opacity=0;},5000);
-  return posts;
+  enriched = enrichPosts(rawPosts);
+
+  document.getElementById('resultsArea').classList.remove('hidden');
+  document.getElementById('filters').style.display = 'flex';
+  document.getElementById('exportBtns').classList.remove('hidden');
+  setStatus('✓ Finished fetching ' + enriched.length + ' posts');
+  fadeStatus();
+
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  const allBtn = document.querySelector('.filters button[data-range="all"]');
+  if (allBtn) allBtn.classList.add('active');
+  applyDateFilter('all', allBtn);
 }
 
-function getWordCount(text){return text?text.trim().split(/\s+/).length:0;}
-function getImageCount(text){return text?(text.match(/\.(jpg|jpeg|png|gif|webp)/gi)||[]).length:0;}
+async function fetchAuthoredPosts(username, mode) {
+  const limit = 20;
+  let entryId = 0;
+  let collected = [];
+  const seen = new Set();
 
-function getReadability(text){
-  if(!text) return {score:0,grade:0,explainer:""};
-  const sentences=text.split(/[.!?]/).filter(s=>s.trim().length>0).length||1;
-  const words=getWordCount(text)||1;
-  const syllables=(text.toLowerCase().match(/[aeiouy]+/g)||[]).length;
-  const flesch=206.835-(1.015*(words/sentences))-(84.6*(syllables/words));
-  const grade=Math.round((0.39*(words/sentences))+(11.8*(syllables/words))-15.59);
-  const explainer=grade<=6?"Easy for elementary level":grade<=9?"Plain English, middle school":grade<=12?"Fairly difficult, high school":"Difficult, college level+";
-  return {score:flesch.toFixed(2),grade,explainer};
+  while (true) {
+    setStatus(`Loading posts… (${collected.length} fetched so far)`);
+    const data = await new Promise((resolve, reject) => {
+      hive.api.getBlog(username, entryId, limit, function(err, result) {
+        if (err) return reject(err);
+        resolve(result || []);
+      });
+    });
+
+    if (!data || data.length === 0) break;
+
+    for (const item of data) {
+      const c = item.comment;
+      if (!c) continue;
+      if (c.author !== username) continue;
+      const key = `${c.author}/${c.permlink}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      collected.push(item);
+      if (mode === '100' && collected.length >= 100) break;
+    }
+
+    if (mode === '100' && collected.length >= 100) break;
+    if (data.length < limit) break;
+    entryId = data[data.length - 1].entry_id + 1;
+  }
+
+  return collected;
 }
 
-function enrichPosts(posts){
-  return posts.map(p=>{
-    const body=p.comment.body||"";
+/* ------------------------
+   Enrichment
+   ------------------------ */
+function getWordCount(text) {
+  if (!text) return 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+function getImageCount(text) {
+  if (!text) return 0;
+  return (text.match(/\.(jpg|jpeg|png|gif|webp)/gi) || []).length;
+}
+function countSyllablesInWord(w) {
+  w = (w || '').toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return 0;
+  if (w.length <= 3) return 1;
+  w = w.replace(/e$/, '');
+  const m = w.match(/[aeiouy]{1,2}/g);
+  return m ? m.length : 1;
+}
+function countSyllables(text) {
+  if (!text) return 1;
+  const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return 1;
+  let s = 0;
+  for (const w of words) s += countSyllablesInWord(w);
+  return Math.max(1, s);
+}
+function countSentences(text) {
+  if (!text) return 1;
+  const parts = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+  return Math.max(1, parts.length);
+}
+function getReadability(text) {
+  if (!text) return { score: 0, grade: 0, explainer: 'Professional' };
+  const words = Math.max(1, getWordCount(text));
+  const syllables = Math.max(1, countSyllables(text));
+  const sentences = Math.max(1, countSentences(text));
+  const flesch = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
+  const grade = Math.round((0.39 * (words / sentences)) + (11.8 * (syllables / words)) - 15.59);
+  
+  // Use groupReadability function to ensure consistency
+  const explainer = groupReadability(flesch);
+  
+  return { score: Number(flesch.toFixed(2)), grade, explainer };
+}
+
+function enrichPosts(posts) {
+  const out = posts.map(item => {
+    const c = item.comment || {};
+    const body = c.body || '';
+    const wc = getWordCount(body);
+    const ic = getImageCount(body);
+    const r = getReadability(body);
+    const created = c.created || item.created || new Date().toISOString();
     return {
-      author:p.comment.author,
-      title:p.comment.title,
-      permlink:p.comment.permlink,
-      created:p.comment.created,
+      author: c.author,
+      permlink: c.permlink,
+      title: c.title || '',
+      created,
+      dateObj: new Date(created),
+      dateISO: new Date(created).toISOString(),
       body,
-      wordCount:getWordCount(body),
-      imageCount:getImageCount(body),
-      readability:getReadability(body)
+      wordCount: wc,
+      imageCount: ic,
+      readability: r
     };
-  }).sort((a,b)=>new Date(b.created)-new Date(a.created));
+  });
+  out.sort((a,b) => new Date(b.created) - new Date(a.created));
+  return out;
 }
 
-function calculateAggregate(posts){
-  const words=posts.map(p=>p.wordCount);
-  const images=posts.map(p=>p.imageCount);
-  const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(2):0;
+/* ------------------------
+   Filters and rendering
+   ------------------------ */
+function applyDateFilter(range, btn) {
+  currentRange = range;
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const now = new Date();
+  filtered = enriched.filter(p => {
+    const d = new Date(p.created);
+    if (range === '7d') return d >= new Date(now.getTime() - 7*86400000);
+    if (range === '30d') return d >= new Date(now.getTime() - 30*86400000);
+    if (range === 'ytd') return d.getFullYear() === now.getFullYear();
+    return true;
+  });
+
+  renderAll();
+}
+
+function renderAll() {
+  if (chartPerPost) { chartPerPost.destroy(); chartPerPost = null; }
+  if (chartCumulative) { chartCumulative.destroy(); chartCumulative = null; }
+  if (chartReadability) { chartReadability.destroy(); chartReadability = null; }
+  if (pieReadability) { pieReadability.destroy(); pieReadability = null; }
+  if (pieWordDist) { pieWordDist.destroy(); pieWordDist = null; }
+
+  if (!filtered || filtered.length === 0) {
+    document.getElementById('cardGrid').innerHTML = '';
+    document.getElementById('postsList').innerHTML = '<p>No posts for this filter.</p>';
+    document.getElementById('readabilityTable').innerHTML = '';
+    document.getElementById('wordDistTable').innerHTML = '';
+    document.getElementById('heatmap').innerHTML = '';
+    document.getElementById('monthmap').innerHTML = '';
+    document.getElementById('yearmap').innerHTML = '';
+    document.getElementById('hourmap').innerHTML = '';
+    return;
+  }
+
+  const agg = computeAggregates(filtered);
+  renderCards(agg);
+  renderPerPostChart(filtered, agg);
+  renderCumulativeChart(filtered);
+  renderReadabilityChart(filtered);
+  renderDowHeatmap(filtered);
+  renderMonthHeatmap(filtered);
+  renderYearHeatmap(filtered);
+  renderHourHeatmap(filtered);
+  renderReadabilityPieAndTable(filtered);
+  renderWordDistPieAndTable(filtered);
+  
+  // Reset level filter and show all posts
+  currentLevelFilter = 'all';
+  document.querySelectorAll('.filter-level').forEach(b => b.classList.remove('active'));
+  const allBtn = document.querySelector('.filter-level[data-level="all"]');
+  if (allBtn) allBtn.classList.add('active');
+  renderPostsList(filtered);
+
+  document.getElementById('exportBtns').classList.remove('hidden');
+}
+
+/* ------------------------
+   Filter posts by reading level
+   ------------------------ */
+function filterPostsByLevel(level, btn) {
+  currentLevelFilter = level;
+  document.querySelectorAll('.filter-level').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  
+  // Only filter and render the posts list
+  if (level === 'all') {
+    displayedPosts = filtered.slice();
+  } else {
+    displayedPosts = filtered.filter(p => {
+      const explainer = p.readability && p.readability.explainer ? p.readability.explainer : '';
+      return explainer === level;
+    });
+  }
+  renderPostsList(displayedPosts);
+}
+
+/* ------------------------
+   Aggregates
+   ------------------------ */
+function computeAggregates(posts) {
+  const count = posts.length;
+  const totalWords = posts.reduce((s,p)=> s + p.wordCount, 0);
+  const totalImages = posts.reduce((s,p)=> s + p.imageCount, 0);
+  const avgWords = count ? (totalWords / count).toFixed(2) : 0;
+  const avgImages = count ? (totalImages / count).toFixed(2) : 0;
+
+  const oldest = posts[posts.length - 1].dateObj;
+  const newest = posts[0].dateObj;
+  const daysSpan = Math.max(1, Math.ceil((new Date() - oldest) / 86400000));
+  const postsPerDay = (count / daysSpan).toFixed(3);
+
+  const byAsc = [...posts].slice().sort((a,b)=> new Date(a.created) - new Date(b.created));
+  let longestGap = 0, gapFrom=null, gapTo=null;
+  for (let i=1;i<byAsc.length;i++){
+    const prev = new Date(byAsc[i-1].created);
+    const curr = new Date(byAsc[i].created);
+    const gapDays = Math.floor((curr - prev)/86400000);
+    if (gapDays > longestGap) { longestGap = gapDays; gapFrom = prev; gapTo = curr; }
+  }
+
+  const daySet = Array.from(new Set(byAsc.map(p => isoDay(p.created)))).sort();
+  let longestStreak = 0, curStreak = 1, streakStart=null, streakEnd=null, curStart=null;
+  if (daySet.length) {
+    curStart = new Date(daySet[0]);
+    for (let i=1;i<daySet.length;i++){
+      const prev = new Date(daySet[i-1]);
+      const curr = new Date(daySet[i]);
+      const diff = Math.round((curr - prev)/86400000);
+      if (diff === 1) curStreak++;
+      else {
+        if (curStreak > longestStreak) { longestStreak = curStreak; streakStart = curStart; streakEnd = prev; }
+        curStreak = 1; curStart = curr;
+      }
+    }
+    const lastDay = new Date(daySet[daySet.length - 1]);
+    if (curStreak > longestStreak) { longestStreak = curStreak; streakStart = curStart; streakEnd = lastDay; }
+  }
+
   return {
-    postCount:posts.length,
-    totalWords:words.reduce((a,b)=>a+b,0),
-    totalImages:images.reduce((a,b)=>a+b,0),
-    avgWords:avg(words),
-    avgImages:avg(images),
-    avgWordsPerImage:(words.reduce((a,b)=>a+b,0)/(images.reduce((a,b)=>a+b,0)||1)).toFixed(2),
-    firstPost:posts.length?new Date(posts[posts.length-1].created).toLocaleDateString():"-",
-    recentPost:posts.length?new Date(posts[0].created).toLocaleDateString():"-"
+    postCount: count,
+    firstPost: oldest,
+    recentPost: newest,
+    totalWords, totalImages, avgWords, avgImages, postsPerDay,
+    longestGapDays: longestGap, gapFrom, gapTo,
+    longestStreak, streakStart, streakEnd
   };
 }
 
-async function lookupPosts(){
-  const username=document.getElementById('username').value.trim().toLowerCase();
-  if(!username){alert("Enter Hive username");return;}
-  document.getElementById('username').disabled=true;
-  document.getElementById('lookupBtn').disabled=true;
+/* ------------------------
+   Cards rendering
+   ------------------------ */
+function renderCards(agg) {
+  const grid = document.getElementById('cardGrid');
 
-  document.getElementById('analyticsCards').style.display='none';
-  document.getElementById('filters').style.display='none';
-  document.getElementById('exportButtons').style.display='none';
-  document.getElementById('collapsibleBtn').style.display='none';
-  document.getElementById('readabilityHeader').style.display='none';
-  document.getElementById('wordDistHeader').style.display='none';
-  document.querySelectorAll('.chart-container').forEach(c=>c.style.display='none');
-  document.getElementById('searchMessage').style.display='none';
-
-  allPosts=await getAllAuthoredPosts(username);
-  enrichedPosts=enrichPosts(allPosts);
-  filteredPosts=enrichPosts(allPosts);
-
-  renderAnalytics();
-
-  document.getElementById('analyticsCards').style.display='flex';
-  document.getElementById('filters').style.display='block';
-  document.getElementById('exportButtons').style.display='block';
-  document.getElementById('collapsibleBtn').style.display='block';
-  document.getElementById('readabilityHeader').style.display='block';
-  document.getElementById('wordDistHeader').style.display='block';
-  document.querySelectorAll('.chart-container').forEach(c=>c.style.display='block');
-  document.getElementById('searchMessage').style.display='block';
-}
-
-function applyDateFilter(type){
-  currentFilter=type;
-  document.querySelectorAll('.filters button').forEach(btn=>btn.classList.remove('active'));
-  event.target.classList.add('active');
-  const now=new Date();
-  filteredPosts = enrichedPosts.filter(p=>{
-    const postDate=new Date(p.created);
-    if(type==='7d') return postDate >= new Date(now-7*864e5);
-    if(type==='30d') return postDate >= new Date(now-30*864e5);
-    if(type==='ytd') return postDate.getFullYear()===now.getFullYear();
-    return true;
-  });
-  renderAnalytics();
-}
-
-function renderAnalytics(){
-  if(!filteredPosts || filteredPosts.length===0){
-    document.getElementById('analyticsCards').innerHTML="";
-    document.getElementById('results').innerHTML="<p>No posts for this filter.</p>";
-    return;
+  const valid = filtered.filter(p => p.wordCount > 0 && p.imageCount > 0);
+  let wordsPerPicture = 'N/A', picturesPerWord = 'N/A';
+  if (valid.length) {
+    const totalW = valid.reduce((s,p)=>s+p.wordCount,0);
+    const totalI = valid.reduce((s,p)=>s+p.imageCount,0);
+    if (totalI > 0) wordsPerPicture = (totalW / totalI).toFixed(2);
+    if (totalW > 0) picturesPerWord = (totalI / totalW).toFixed(6);
   }
-  const agg=calculateAggregate(filteredPosts);
-  const cardsDiv=document.getElementById('analyticsCards');
-  cardsDiv.innerHTML=`
-    <div class="card"><h4>Post Count</h4><p>${agg.postCount}</p></div>
-    <div class="card"><h4>First Post</h4><p>${agg.firstPost}</p></div>
-    <div class="card"><h4>Most Recent Post</h4><p>${agg.recentPost}</p></div>
+
+  const gapFrom = agg.gapFrom ? formatDate(agg.gapFrom) : '-';
+  const gapTo = agg.gapTo ? formatDate(agg.gapTo) : '-';
+  const streakFrom = agg.streakStart ? formatDate(agg.streakStart) : '-';
+  const streakTo = agg.streakEnd ? formatDate(agg.streakEnd) : '-';
+
+  grid.innerHTML = `
+    <div class="card"><h4>First Post</h4><p>${formatDate(agg.firstPost)}</p></div>
+    <div class="card"><h4>Most Recent Post</h4><p>${formatDate(agg.recentPost)}</p></div>
+    <div class="card"><h4>Total Posts</h4><p>${agg.postCount}</p></div>
+    <div class="card"><h4>Posts / Day</h4><p>${agg.postsPerDay}</p></div>
+
+    <div class="card"><h4>Longest Streak</h4><p>${agg.longestStreak} days</p></div>
+    <div class="card"><h4>Streak Period</h4><p>${streakFrom} → ${streakTo}</p></div>
+    <div class="card"><h4>Longest Break</h4><p>${agg.longestGapDays} days</p></div>
+    <div class="card"><h4>Break Period</h4><p>${gapFrom} → ${gapTo}</p></div>
+
     <div class="card"><h4>Total Words</h4><p>${agg.totalWords}</p></div>
+    <div class="card"><h4>Avg Words/Post</h4><p>${agg.avgWords}</p></div>
     <div class="card"><h4>Total Images</h4><p>${agg.totalImages}</p></div>
-    <div class="card"><h4>Avg Words / Post</h4><p>${agg.avgWords}</p></div>
-    <div class="card"><h4>Avg Images</h4><p>${agg.avgImages}</p></div>
+    <div class="card"><h4>Avg Images/Post</h4><p>${agg.avgImages}</p></div>
+
+    <div class="card"><h4>Words Per Picture</h4><p>${wordsPerPicture}</p></div>
+    <div class="card"><h4>Pictures Per Word</h4><p>${picturesPerWord}</p></div>
   `;
-  renderWordChart(filteredPosts, agg);
-  renderReadabilitySummary(filteredPosts);
-  renderWordDistSummary(filteredPosts);
-  renderPosts(filteredPosts);
 }
 
-function renderWordChart(posts, agg){
-  const ctx=document.getElementById('wordChart').getContext('2d');
-  const labels=posts.map(p=>new Date(p.created).toLocaleDateString());
-  const data=posts.map(p=>p.wordCount);
-  const avg=Math.round(posts.reduce((a,b)=>a+b.wordCount,0)/posts.length);
-  if(wordChart) wordChart.destroy();
-  wordChart=new Chart(ctx,{
-    type:'bar',
-    data:{
+/* ------------------------
+   Chart: per-post words/images (dual axes)
+   ------------------------ */
+function renderPerPostChart(posts, agg) {
+  const ctx = document.getElementById('chartPerPost').getContext('2d');
+
+  const sorted = posts.slice().reverse();
+  const labels = sorted.map(p => isoDay(p.dateObj));
+  const words = sorted.map(p => p.wordCount);
+  const images = sorted.map(p => p.imageCount);
+  const avgLine = Array(words.length).fill(Number(agg.avgWords));
+
+  chartPerPost = new Chart(ctx, {
+    type: 'bar',
+    data: {
       labels,
-      datasets:[{label:'Word Count',data,backgroundColor:'rgba(0,123,255,0.5)'},
-      {label:'Average Words',data:Array(data.length).fill(avg),type:'line',borderColor:'red',fill:false}]
+      datasets: [
+        { type:'bar', label:'Words / Post', data: words, backgroundColor: 'rgba(96, 165, 250, 0.8)', yAxisID:'yWords' },
+        { type:'line', label:'Avg Words', data: avgLine, borderColor:'#f87171', borderWidth: 2, fill:false, tension:0.2, pointRadius:0, yAxisID:'yWords' },
+        { type:'bar', label:'Images / Post', data: images, backgroundColor: 'rgba(52, 211, 153, 0.8)', yAxisID:'yImages' }
+      ]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true}}}
+    options: {
+      responsive:true, 
+      maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      scales: {
+        yWords: { 
+          position:'left', 
+          title:{display:true, text:'Words', color: '#d4dde8', font: {size: 13}},
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        yImages: { 
+          position:'right', 
+          title:{display:true, text:'Images', color: '#d4dde8', font: {size: 13}}, 
+          grid:{ drawOnChartArea:false },
+          ticks: { color: '#cbd5e1' }
+        },
+        x: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        }
+      }
+    }
   });
-  document.querySelector('#wordChart').parentElement.style.display='block';
 }
 
-function renderReadabilitySummary(posts){
-  const summary={};
-  posts.forEach(p=>{
-    const lvl=p.readability.explainer;
-    summary[lvl]=(summary[lvl]||0)+1;
-  });
-  let table="<table class='readability-table'><tr><th>Readability Level</th><th>Number of Posts</th><th>% of Posts</th></tr>";
-  const total=posts.length;
-  Object.keys(summary).forEach(k=>{
-    table+=`<tr><td>${k}</td><td>${summary[k]}</td><td>${((summary[k]/total)*100).toFixed(1)}%</td></tr>`;
-  });
-  table+="</table>";
-  document.getElementById('readabilitySummary').innerHTML=table;
+/* ------------------------
+   Chart: cumulative words
+   ------------------------ */
+function renderCumulativeChart(posts) {
+  const ctx = document.getElementById('chartCumulative').getContext('2d');
 
-  const ctx=document.getElementById('readabilityPie').getContext('2d');
-  if(readabilityPie) readabilityPie.destroy();
-  readabilityPie=new Chart(ctx,{
+  const map = new Map();
+  posts.forEach(p => {
+    const key = isoDay(p.dateObj);
+    map.set(key, (map.get(key) || 0) + p.wordCount);
+  });
+
+  const dayKeys = Array.from(map.keys()).sort();
+  if (dayKeys.length === 0) return;
+
+  const labels = [];
+  const daily = [];
+  const first = new Date(dayKeys[0]);
+  const last = new Date(dayKeys[dayKeys.length - 1]);
+  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+    const k = d.toISOString().slice(0,10);
+    labels.push(k);
+    daily.push(map.get(k) || 0);
+  }
+
+  const cum = [];
+  daily.reduce((acc,val,i) => { const n = acc + val; cum[i] = n; return n; }, 0);
+
+  chartCumulative = new Chart(ctx, {
+    type:'line',
+    data: { 
+      labels, 
+      datasets:[{ 
+        label:'Cumulative Words', 
+        data:cum, 
+        fill:true, 
+        backgroundColor:'rgba(96, 165, 250, 0.2)', 
+        borderColor:'rgba(96, 165, 250, 0.9)',
+        borderWidth: 2,
+        tension: 0.3
+      }] 
+    },
+    options: { 
+      responsive:true, 
+      maintainAspectRatio:false,
+      scales: {
+        y: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        }
+      }
+    }
+  });
+}
+
+/* ------------------------
+   Chart: readability over time with explainers
+   ------------------------ */
+function renderReadabilityChart(posts) {
+  const ctx = document.getElementById('chartReadability').getContext('2d');
+
+  const pointMeta = posts.slice().reverse().map(p => {
+    return {
+      label: `${isoDay(p.dateObj)} ${p.dateObj.toLocaleTimeString()}`,
+      y: p.readability.score,
+      title: p.title,
+      score: p.readability.score,
+      grade: p.readability.grade,
+      explainer: p.readability.explainer,
+      author: p.author,
+      permlink: p.permlink
+    };
+  });
+
+  const labels = pointMeta.map(m => m.label);
+  const data = pointMeta.map(m => m.y);
+
+  // Calculate min and max for auto-scaling
+  const minScore = Math.min(...data);
+  const maxScore = Math.max(...data);
+  const yMin = Math.floor(Math.min(minScore - 5, 0)); // Add padding, allow negatives
+  const yMax = Math.ceil(Math.max(maxScore + 5, 100));
+
+  chartReadability = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels,
+      datasets:[{
+        label:'Flesch Reading Ease Score',
+        data: data,
+        pointBackgroundColor: 'rgba(168, 85, 247, 0.9)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 1,
+        borderColor: 'rgba(168, 85, 247, 0.4)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        fill:true,
+        tension:0.3,
+        pointRadius:5,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive:true, 
+      maintainAspectRatio:false,
+      scales: {
+        y: {
+          title: { display: true, text: 'Flesch Score', color: '#d4dde8', font: {size: 13} },
+          min: yMin,
+          max: yMax,
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          ticks: { maxRotation:45, minRotation:0, color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const i = ctx.dataIndex;
+              const m = pointMeta[i];
+              return [
+                `${m.title || '(no title)'}`,
+                `Score: ${m.score} (Grade ${m.grade})`,
+                `Level: ${m.explainer}`
+              ];
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1,
+          padding: 12
+        }
+      },
+      onClick: function(evt, elements) {
+        if (!elements || !elements.length) return;
+        const el = elements[0];
+        const idx = el.index;
+        const m = pointMeta[idx];
+        if (!m) return;
+        const url = `https://peakd.com/@${m.author}/${m.permlink}`;
+        if (confirm(`Open post:\n"${m.title || '(no title)'}"\n\nOpen in a new tab?`)) {
+          window.open(url,'_blank');
+        }
+      }
+    }
+  });
+}
+
+/* ------------------------
+   Heatmap: daily counts Mon..Sun
+   ------------------------ */
+function renderDowHeatmap(posts) {
+  const container = document.getElementById('heatmap');
+  container.innerHTML = '';
+
+  const counts = {0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+  posts.forEach(p => {
+    const d = p.dateObj.getDay(); 
+    counts[d] = (counts[d] || 0) + 1;
+  });
+
+  const order = [1,2,3,4,5,6,0];
+  const max = Math.max(...Object.values(counts), 1);
+
+  order.forEach((dow, idx) => {
+    const col = document.createElement('div');
+    col.className = 'heat-col';
+    const label = document.createElement('div');
+    label.className = 'heat-label';
+    label.innerText = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx];
+    const box = document.createElement('div');
+    box.className = 'heat-cell';
+    const value = counts[dow] || 0;
+    const alpha = 0.2 + 0.8 * (value / max);
+    box.style.background = `rgba(59, 130, 246, ${alpha})`;
+    box.innerText = value;
+    col.appendChild(label);
+    col.appendChild(box);
+    container.appendChild(col);
+  });
+}
+
+/* ------------------------
+   Heatmap: posts by month (Jan-Dec)
+   ------------------------ */
+function renderMonthHeatmap(posts) {
+  const container = document.getElementById('monthmap');
+  container.innerHTML = '';
+
+  const counts = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0};
+  posts.forEach(p => {
+    const m = p.dateObj.getMonth();
+    counts[m] = (counts[m] || 0) + 1;
+  });
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const max = Math.max(...Object.values(counts), 1);
+
+  for (let m = 0; m < 12; m++) {
+    const col = document.createElement('div');
+    col.className = 'heat-col';
+    const label = document.createElement('div');
+    label.className = 'heat-label';
+    label.innerText = monthNames[m];
+    const box = document.createElement('div');
+    box.className = 'heat-cell';
+    const value = counts[m] || 0;
+    const alpha = 0.2 + 0.8 * (value / max);
+    box.style.background = `rgba(52, 211, 153, ${alpha})`;
+    box.innerText = value;
+    col.appendChild(label);
+    col.appendChild(box);
+    container.appendChild(col);
+  }
+}
+
+/* ------------------------
+   Heatmap: posts by year
+   ------------------------ */
+function renderYearHeatmap(posts) {
+  const container = document.getElementById('yearmap');
+  container.innerHTML = '';
+
+  const counts = {};
+  posts.forEach(p => {
+    const y = p.dateObj.getFullYear();
+    counts[y] = (counts[y] || 0) + 1;
+  });
+
+  const years = Object.keys(counts).sort();
+  const max = Math.max(...Object.values(counts), 1);
+
+  years.forEach(year => {
+    const col = document.createElement('div');
+    col.className = 'heat-col';
+    const label = document.createElement('div');
+    label.className = 'heat-label';
+    label.innerText = year;
+    const box = document.createElement('div');
+    box.className = 'heat-cell';
+    const value = counts[year];
+    const alpha = 0.2 + 0.8 * (value / max);
+    box.style.background = `rgba(251, 146, 60, ${alpha})`;
+    box.innerText = value;
+    col.appendChild(label);
+    col.appendChild(box);
+    container.appendChild(col);
+  });
+}
+
+/* ------------------------
+   Heatmap: posts by hour (0-23)
+   ------------------------ */
+function renderHourHeatmap(posts) {
+  const container = document.getElementById('hourmap');
+  container.innerHTML = '';
+
+  const counts = {};
+  for (let h = 0; h < 24; h++) counts[h] = 0;
+  
+  posts.forEach(p => {
+    const h = p.dateObj.getHours();
+    counts[h] = (counts[h] || 0) + 1;
+  });
+
+  const max = Math.max(...Object.values(counts), 1);
+
+  for (let h = 0; h < 24; h++) {
+    const col = document.createElement('div');
+    col.className = 'heat-col';
+    const label = document.createElement('div');
+    label.className = 'heat-label small';
+    label.innerText = `${h}h`;
+    const box = document.createElement('div');
+    box.className = 'heat-cell small';
+    const value = counts[h] || 0;
+    const alpha = 0.2 + 0.8 * (value / max);
+    box.style.background = `rgba(168, 85, 247, ${alpha})`;
+    box.innerText = value;
+    col.appendChild(label);
+    col.appendChild(box);
+    container.appendChild(col);
+  }
+}
+
+/* ------------------------
+   Pie + Tables
+   ------------------------ */
+function renderReadabilityPieAndTable(posts) {
+  const counts = {};
+  posts.forEach(p => {
+    const g = groupReadability(p.readability.score);
+    counts[g] = (counts[g] || 0) + 1;
+  });
+  const total = posts.length;
+
+  let html = `<table><tr><th>Reading Level</th><th>Posts</th><th>%</th></tr>`;
+  const orderedLevels = ['Elementary', 'Middle School', 'High School', 'College', 'University', 'Post-Graduate', 'Professional'];
+  orderedLevels.forEach(k => {
+    if (counts[k]) {
+      html += `<tr><td>${k}</td><td>${counts[k]}</td><td>${((counts[k]/total)*100).toFixed(1)}%</td></tr>`;
+    }
+  });
+  html += `</table>`;
+  document.getElementById('readabilityTable').innerHTML = html;
+
+  const ctx = document.getElementById('pieReadability').getContext('2d');
+  const pieLabels = orderedLevels.filter(k => counts[k]);
+  const pieData = pieLabels.map(k => counts[k]);
+  
+  pieReadability = new Chart(ctx, {
     type:'pie',
-    data:{
-      labels:Object.keys(summary),
-      datasets:[{data:Object.values(summary),backgroundColor:['#007bff','#28a745','#ffc107','#dc3545']}]
+    data: { 
+      labels: pieLabels, 
+      datasets:[{ 
+        data: pieData, 
+        backgroundColor:[
+          '#60a5fa',
+          '#34d399',
+          '#fbbf24',
+          '#fb923c',
+          '#f87171',
+          '#a78bfa',
+          '#94a3b8'
+        ],
+        borderColor: '#1e293b',
+        borderWidth: 2
+      }] 
     },
-    options:{responsive:true,maintainAspectRatio:false}
+    options: { 
+      responsive:true, 
+      maintainAspectRatio:false,
+      plugins: {
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        }
+      }
+    }
   });
-  document.querySelector('#readabilityPie').parentElement.style.display='block';
 }
 
-function renderWordDistSummary(posts){
-  const dist={"<50":0,"<250":0,"<500":0,"<1000":0,"<2000":0,">2000":0};
-  posts.forEach(p=>{
-    const w=p.wordCount;
-    if(w<50) dist["<50"]++;
-    else if(w<250) dist["<250"]++;
-    else if(w<500) dist["<500"]++;
-    else if(w<1000) dist["<1000"]++;
-    else if(w<2000) dist["<2000"]++;
-    else dist[">2000"]++;
+function renderWordDistPieAndTable(posts) {
+  const buckets = {'<50':0,'<250':0,'<500':0,'<1000':0,'<2000':0,'>2000':0};
+  posts.forEach(p => {
+    const w = p.wordCount;
+    if (w < 50) buckets['<50']++;
+    else if (w < 250) buckets['<250']++;
+    else if (w < 500) buckets['<500']++;
+    else if (w < 1000) buckets['<1000']++;
+    else if (w < 2000) buckets['<2000']++;
+    else buckets['>2000']++;
   });
-  let table="<table class='worddist-table'><tr><th>Word Count Range</th><th>Posts</th><th>% of Posts</th></tr>";
-  const total=posts.length;
-  Object.keys(dist).forEach(k=>{
-    table+=`<tr><td>${k}</td><td>${dist[k]}</td><td>${((dist[k]/total)*100).toFixed(1)}%</td></tr>`;
-  });
-  table+="</table>";
-  document.getElementById('wordDistSummary').innerHTML=table;
+  const total = posts.length;
+  let html = `<table><tr><th>Word Range</th><th>Posts</th><th>%</th></tr>`;
+  Object.keys(buckets).forEach(k => html += `<tr><td>${k}</td><td>${buckets[k]}</td><td>${((buckets[k]/total)*100).toFixed(1)}%</td></tr>`);
+  html += `</table>`;
+  document.getElementById('wordDistTable').innerHTML = html;
 
-  const ctx=document.getElementById('wordDistPie').getContext('2d');
-  if(wordDistPie) wordDistPie.destroy();
-  wordDistPie=new Chart(ctx,{
+  const ctx = document.getElementById('pieWordDist').getContext('2d');
+  pieWordDist = new Chart(ctx, {
     type:'pie',
-    data:{
-      labels:Object.keys(dist),
-      datasets:[{data:Object.values(dist),backgroundColor:['#007bff','#28a745','#ffc107','#dc3545','#6f42c1','#20c997']}]
+    data: { 
+      labels:Object.keys(buckets), 
+      datasets:[{ 
+        data:Object.values(buckets), 
+        backgroundColor:['#60a5fa','#34d399','#fbbf24','#fb923c','#f87171','#a78bfa'],
+        borderColor: '#1e293b',
+        borderWidth: 2
+      }] 
     },
-    options:{responsive:true,maintainAspectRatio:false}
+    options: { 
+      responsive:true, 
+      maintainAspectRatio:false,
+      plugins: {
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        }
+      }
+    }
   });
-  document.querySelector('#wordDistPie').parentElement.style.display='block';
 }
 
-function renderPosts(posts){
-  const div=document.getElementById('results');
-  div.innerHTML="";
-  posts.forEach((p,i)=>{
-    const el=document.createElement('div');
-    el.className='post';
-    el.innerHTML=`<div class="post-title">${i+1}. ${p.title}</div>
-    <div><a href="https://peakd.com/@${p.author}/${p.permlink}" target="_blank">View Post</a></div>
-    <div><small>Posted by @${p.author} on ${new Date(p.created).toLocaleString()}</small></div>
-    <div><strong>Word Count:</strong> ${p.wordCount}</div>
-    <div><strong>Image Count:</strong> ${p.imageCount}</div>
-    <div><strong>Readability Score:</strong> ${p.readability.score} | Grade Level: ${p.readability.grade} | ${p.readability.explainer}</div>`;
-    div.appendChild(el);
+/* ------------------------
+   Posts list
+   ------------------------ */
+function renderPostsList(posts) {
+  const el = document.getElementById('postsList');
+  el.innerHTML = '';
+  posts.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.innerHTML = `<div style="font-weight:700; font-size: 15px;">${i+1}. ${escapeHtml(p.title || '(no title)')}</div>
+      <div class="small">Posted by @${p.author} on ${new Date(p.created).toLocaleString()}</div>
+      <div style="margin-top:6px"><strong>Words:</strong> ${p.wordCount} &nbsp; <strong>Images:</strong> ${p.imageCount}</div>
+      <div style="margin-top:6px"><strong>Readability:</strong> ${p.readability.score} (Grade ${p.readability.grade}) – <em>${p.readability.explainer}</em></div>
+      <div style="margin-top:8px"><a href="https://peakd.com/@${p.author}/${p.permlink}" target="_blank">View Post</a></div>`;
+    el.appendChild(div);
   });
-  document.getElementById('collapsibleBtn').style.display='block';
 }
 
-function togglePosts(){
-  const content=document.getElementById('results');
-  content.style.display=(content.style.display==='none')?'block':'none';
+/* ------------------------
+   Exports
+   ------------------------ */
+function exportChartPNG(chartInstance) {
+  if (!chartInstance) return alert('Chart not ready');
+  const dataUrl = chartInstance.toBase64Image();
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'chart.png';
+  a.click();
 }
 
-function downloadFile(filename,content){
-  const blob=new Blob([content],{type:'text/plain'});
-  const link=document.createElement('a');
-  link.href=URL.createObjectURL(blob);
-  link.download=filename;
-  link.click();
-}
-
-function exportCSV(){
-  let csv="Author,Title,Date,Content,Word Count,Image Count\n";
-  filteredPosts.forEach(p=>{
-    const row=[p.author,`"${p.title}"`,p.created,`"${p.body.replace(/"/g,'""')}"`,p.wordCount,p.imageCount];
-    csv+=row.join(",")+"\n";
+function exportCSV() {
+  if (!displayedPosts || !displayedPosts.length) return alert('No posts to export');
+  const headers = ['Author','Title','Date','Content','Word Count','Image Count','Readability Score','Grade','Level'];
+  const rows = [headers.join(',')];
+  displayedPosts.forEach(p => {
+    const line = [
+      p.author,
+      escapeCsv(p.title || ''),
+      escapeCsv(p.dateISO),
+      escapeCsv((p.body || '').replace(/\n/g,' ')),
+      p.wordCount,
+      p.imageCount,
+      p.readability.score,
+      p.readability.grade,
+      escapeCsv(p.readability.explainer)
+    ];
+    rows.push(line.join(','));
   });
-  downloadFile('hive_posts.csv',csv);
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); 
+  a.href = URL.createObjectURL(blob); 
+  a.download = 'hive_posts.csv'; 
+  a.click(); 
+  a.remove();
 }
 
-function exportJSON(){
-  downloadFile('hive_posts.json',JSON.stringify(filteredPosts,null,2));
+function exportJSON() {
+  if (!displayedPosts || !displayedPosts.length) return alert('No posts to export');
+  const blob = new Blob([JSON.stringify(displayedPosts, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); 
+  a.href = URL.createObjectURL(blob); 
+  a.download = 'hive_posts.json'; 
+  a.click(); 
+  a.remove();
 }
+
+/* ------------------------
+   Utilities
+   ------------------------ */
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'})[c]);
+}
+
+/* ------------------------
+   Init
+   ------------------------ */
+(function init() {
+  document.getElementById('resultsArea').classList.add('hidden');
+  document.getElementById('filters').style.display = 'none';
+  document.getElementById('exportBtns').classList.add('hidden');
+  document.getElementById('searchMessage').classList.add('hidden');
+  setStatus('');
+})();
+
 </script>
 </body>
 </html>

@@ -553,7 +553,7 @@ async function fetchAuthoredPosts(username, mode) {
       const c = item.comment;
       if (!c) continue;
       if (c.author !== username) continue;
-      if (c.permlink && /hive-\d{6}$/.test(c.permlink)) continue;
+	  if (c.permlink && /hive-\d{6}$/.test(c.permlink)) continue;
       const key = `${c.author}/${c.permlink}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -576,29 +576,32 @@ function cleanTextForReadability(text) {
   
   let cleaned = text;
   
-  // Remove markdown image syntax: ![alt text](url)
-  cleaned = cleaned.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '');
-  
-  // Remove standalone URLs (http, https, www)
-  cleaned = cleaned.replace(/https?:\/\/[^\s]+/g, '');
-  cleaned = cleaned.replace(/www\.[^\s]+/g, '');
-  
-  // Extract link text from markdown links [text](url), keep only the text
+  // First, extract text from markdown links [text](url) and keep only the text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
   
-  // Remove HTML tags
+  // Remove markdown image syntax: ![alt text](url) - no text to preserve
+  cleaned = cleaned.replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ');
+  
+  // Remove standalone URLs with word boundaries to avoid eating adjacent text
+  cleaned = cleaned.replace(/\bhttps?:\/\/\S+/g, ' ');
+  cleaned = cleaned.replace(/\bwww\.\S+/g, ' ');
+  
+  // Remove HTML tags but preserve the space
   cleaned = cleaned.replace(/<[^>]*>/g, ' ');
   
-  // Remove markdown headers (##, ###, etc)
+  // Remove markdown headers (##, ###, etc) but keep the text
   cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
   
   // Remove markdown bold/italic markers but keep the text
   cleaned = cleaned.replace(/(\*\*|__)(.*?)\1/g, '$2');
   cleaned = cleaned.replace(/(\*|_)(.*?)\1/g, '$2');
   
-  // Remove code blocks
-  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
-  cleaned = cleaned.replace(/`[^`]+`/g, '');
+  // Remove code blocks and inline code
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, ' ');
+  cleaned = cleaned.replace(/`[^`]+`/g, ' ');
+  
+  // Remove markdown horizontal rules
+  cleaned = cleaned.replace(/^[\-*_]{3,}\s*$/gm, ' ');
   
   // Remove excess whitespace and normalize
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
@@ -608,7 +611,11 @@ function cleanTextForReadability(text) {
 
 function getWordCount(text) {
   if (!text) return 0;
-  return text.trim().split(/\s+/).filter(Boolean).length;
+  
+  const wordPattern = /\b[a-zA-Z]+(?:['-][a-zA-Z]+)*\b/g;
+  const words = text.match(wordPattern);
+  
+  return words ? words.length : 0;
 }
 
 function getImageCount(text) {

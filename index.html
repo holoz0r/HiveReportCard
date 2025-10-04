@@ -412,6 +412,26 @@ html { scroll-behavior: smooth; }
             <div id="wordDistTable" class="table-wrap"></div>
           </div>
         </div>
+		
+
+
+<div class="chart-card">
+  <h3>Engagement by Readability Level</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementReadability"></canvas></div>
+  <div class="center"><button onclick="exportChartPNG(chartEngagementReadability)">Export Chart to PNG</button></div>
+</div>
+
+<div class="chart-card">
+  <h3>Engagement by Word Count</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementWordCount"></canvas></div>
+  <div class="center"><button onclick="exportChartPNG(chartEngagementWordCount)">Export Chart to PNG</button></div>
+</div>
+
+<div class="chart-card">
+  <h3>Engagement by Content Type</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementContentType"></canvas></div>
+  <div class="center"><button onclick="exportChartPNG(chartEngagementContentType)">Export Chart to PNG</button></div>
+</div>
       </div>
 
       <div class="export-row">
@@ -455,6 +475,9 @@ let chartCumulative = null;
 let chartReadability = null;
 let pieReadability = null;
 let pieWordDist = null;
+let chartEngagementReadability = null;  
+let chartEngagementWordCount = null;    
+let chartEngagementContentType = null; 
 
 /* ------------------------
    Helpers
@@ -609,6 +632,16 @@ function cleanTextForReadability(text) {
   return cleaned;
 }
 
+function getImageWordRatio(imageCount, wordCount) {
+  if (wordCount === 0) return imageCount > 0 ? 'Image-only' : 'Empty';
+  if (imageCount === 0) return 'Text-only';
+  
+  const ratio = wordCount / imageCount;
+  if (ratio < 50) return 'Image-heavy';
+  if (ratio < 200) return 'Balanced';
+  return 'Text-heavy';
+}
+
 function getWordCount(text) {
   if (!text) return 0;
   
@@ -669,7 +702,10 @@ function enrichPosts(posts) {
     const wc = getWordCount(cleanedBody);
     const ic = getImageCount(body);
     const r = getReadability(cleanedBody);
+	const replies = c.children || 0;
     const created = c.created || item.created || new Date().toISOString();
+    const contentType = getImageWordRatio(ic, wc);
+  
     return {
       author: c.author,
       permlink: c.permlink,
@@ -680,7 +716,9 @@ function enrichPosts(posts) {
       body,
       wordCount: wc,
       imageCount: ic,
-      readability: r
+      readability: r,
+      replies: replies,
+      contentType: contentType
     };
   });
   out.sort((a,b) => new Date(b.created) - new Date(a.created));
@@ -712,6 +750,9 @@ function renderAll() {
   if (chartReadability) { chartReadability.destroy(); chartReadability = null; }
   if (pieReadability) { pieReadability.destroy(); pieReadability = null; }
   if (pieWordDist) { pieWordDist.destroy(); pieWordDist = null; }
+  if (chartEngagementReadability) { chartEngagementReadability.destroy(); chartEngagementReadability = null; }
+if (chartEngagementWordCount) { chartEngagementWordCount.destroy(); chartEngagementWordCount = null; }
+if (chartEngagementContentType) { chartEngagementContentType.destroy(); chartEngagementContentType = null; }
 
   if (!filtered || filtered.length === 0) {
     document.getElementById('cardGrid').innerHTML = '';
@@ -736,6 +777,9 @@ function renderAll() {
   renderHourHeatmap(filtered);
   renderReadabilityPieAndTable(filtered);
   renderWordDistPieAndTable(filtered);
+  chartEngagementReadability = renderEngagementByReadability(filtered);
+chartEngagementWordCount = renderEngagementByWordCount(filtered);
+chartEngagementContentType = renderEngagementByContentType(filtered);
   
   // Reset level filter and show all posts
   currentLevelFilter = 'all';
@@ -777,6 +821,17 @@ function computeAggregates(posts) {
   const totalImages = posts.reduce((s,p)=> s + p.imageCount, 0);
   const avgWords = count ? (totalWords / count).toFixed(2) : 0;
   const avgImages = count ? (totalImages / count).toFixed(2) : 0;
+  const totalReplies = posts.reduce((s,p)=> s + p.replies, 0);
+  const avgReplies = count ? (totalReplies / count).toFixed(2) : 0;
+  
+  const contentTypes = {
+  'Image-heavy': posts.filter(p => p.contentType === 'Image-heavy').length,
+  'Balanced': posts.filter(p => p.contentType === 'Balanced').length,
+  'Text-heavy': posts.filter(p => p.contentType === 'Text-heavy').length,
+  'Text-only': posts.filter(p => p.contentType === 'Text-only').length,
+  'Image-only': posts.filter(p => p.contentType === 'Image-only').length
+};
+
 
   const oldest = posts[posts.length - 1].dateObj;
   const newest = posts[0].dateObj;
@@ -810,14 +865,80 @@ function computeAggregates(posts) {
     if (curStreak > longestStreak) { longestStreak = curStreak; streakStart = curStart; streakEnd = lastDay; }
   }
 
-  return {
-    postCount: count,
-    firstPost: oldest,
-    recentPost: newest,
-    totalWords, totalImages, avgWords, avgImages, postsPerDay,
-    longestGapDays: longestGap, gapFrom, gapTo,
-    longestStreak, streakStart, streakEnd
-  };
+return {
+  postCount: count,
+  firstPost: oldest,
+  recentPost: newest,
+  totalWords, totalImages, avgWords, avgImages, postsPerDay,
+  longestGapDays: longestGap, gapFrom, gapTo,
+  longestStreak, streakStart, streakEnd,
+  totalReplies, avgReplies,
+  contentTypes
+};
+}
+
+/* ------------------------
+   Engagement analysis by various factors
+   ------------------------ */
+function computeEngagementByReadability(posts) {
+  const levels = ['Elementary', 'Middle School', 'High School', 'College', 'University', 'Post-Graduate', 'Professional'];
+  const data = {};
+  
+  levels.forEach(level => {
+    const postsInLevel = posts.filter(p => p.readability.explainer === level);
+    if (postsInLevel.length > 0) {
+      const totalReplies = postsInLevel.reduce((sum, p) => sum + p.replies, 0);
+      data[level] = {
+        count: postsInLevel.length,
+        avgReplies: (totalReplies / postsInLevel.length).toFixed(2)
+      };
+    }
+  });
+  
+  return data;
+}
+
+function computeEngagementByWordCount(posts) {
+  const ranges = [
+    { label: '<250', min: 0, max: 249 },
+    { label: '250-500', min: 250, max: 500 },
+    { label: '501-1000', min: 501, max: 1000 },
+    { label: '1001-2000', min: 1001, max: 2000 },
+    { label: '>2000', min: 2001, max: Infinity }
+  ];
+  
+  const data = {};
+  
+  ranges.forEach(range => {
+    const postsInRange = posts.filter(p => p.wordCount >= range.min && p.wordCount <= range.max);
+    if (postsInRange.length > 0) {
+      const totalReplies = postsInRange.reduce((sum, p) => sum + p.replies, 0);
+      data[range.label] = {
+        count: postsInRange.length,
+        avgReplies: (totalReplies / postsInRange.length).toFixed(2)
+      };
+    }
+  });
+  
+  return data;
+}
+
+function computeEngagementByContentType(posts) {
+  const types = ['Image-heavy', 'Balanced', 'Text-heavy', 'Text-only', 'Image-only'];
+  const data = {};
+  
+  types.forEach(type => {
+    const postsOfType = posts.filter(p => p.contentType === type);
+    if (postsOfType.length > 0) {
+      const totalReplies = postsOfType.reduce((sum, p) => sum + p.replies, 0);
+      data[type] = {
+        count: postsOfType.length,
+        avgReplies: (totalReplies / postsOfType.length).toFixed(2)
+      };
+    }
+  });
+  
+  return data;
 }
 
 /* ------------------------
@@ -853,11 +974,18 @@ function renderCards(agg) {
 
     <div class="card"><h4>Total Words</h4><p>${agg.totalWords}</p></div>
     <div class="card"><h4>Avg Words/Post</h4><p>${agg.avgWords}</p></div>
+		<div class="card"><h4>Total Replies</h4><p>${agg.totalReplies}</p></div>
+<div class="card"><h4>Avg Replies/Post</h4><p>${agg.avgReplies}</p></div>
+
     <div class="card"><h4>Total Images</h4><p>${agg.totalImages}</p></div>
     <div class="card"><h4>Avg Images/Post</h4><p>${agg.avgImages}</p></div>
-
     <div class="card"><h4>Words Per Picture</h4><p>${wordsPerPicture}</p></div>
     <div class="card"><h4>Pictures Per Word</h4><p>${picturesPerWord}</p></div>
+	
+<div class="card"><h4>Image-Heavy Posts</h4><p>${agg.contentTypes['Image-heavy']}</p></div>
+<div class="card"><h4>Text-Heavy Posts</h4><p>${agg.contentTypes['Text-heavy']}</p></div>
+<div class="card"><h4>Balanced Posts</h4><p>${agg.contentTypes['Balanced']}</p></div>
+
   `;
 }
 
@@ -1217,6 +1345,172 @@ function renderHourHeatmap(posts) {
 }
 
 /* ------------------------
+   Engagement Charts
+   ------------------------ */
+function renderEngagementByReadability(posts) {
+  const ctx = document.getElementById('chartEngagementReadability').getContext('2d');
+  const data = computeEngagementByReadability(posts);
+  
+  const labels = Object.keys(data);
+  const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
+  const counts = labels.map(label => data[label].count);
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg Replies',
+        data: avgReplies,
+        backgroundColor: 'rgba(96, 165, 250, 0.8)',
+        borderColor: 'rgba(96, 165, 250, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Average Replies', color: '#d4dde8', font: { size: 13 } },
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          ticks: { color: '#cbd5e1', maxRotation: 45, minRotation: 45 },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(context) {
+              const label = context.label;
+              return `Posts: ${data[label].count}`;
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1
+        }
+      }
+    }
+  });
+}
+
+function renderEngagementByWordCount(posts) {
+  const ctx = document.getElementById('chartEngagementWordCount').getContext('2d');
+  const data = computeEngagementByWordCount(posts);
+  
+  const labels = Object.keys(data);
+  const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg Replies',
+        data: avgReplies,
+        backgroundColor: 'rgba(52, 211, 153, 0.8)',
+        borderColor: 'rgba(52, 211, 153, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Average Replies', color: '#d4dde8', font: { size: 13 } },
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(context) {
+              const label = context.label;
+              return `Posts: ${data[label].count}`;
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1
+        }
+      }
+    }
+  });
+}
+
+function renderEngagementByContentType(posts) {
+  const ctx = document.getElementById('chartEngagementContentType').getContext('2d');
+  const data = computeEngagementByContentType(posts);
+  
+  const labels = Object.keys(data);
+  const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Avg Replies',
+        data: avgReplies,
+        backgroundColor: 'rgba(251, 146, 60, 0.8)',
+        borderColor: 'rgba(251, 146, 60, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Average Replies', color: '#d4dde8', font: { size: 13 } },
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(context) {
+              const label = context.label;
+              return `Posts: ${data[label].count}`;
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1
+        }
+      }
+    }
+  });
+}
+
+/* ------------------------
    Pie + Tables
    ------------------------ */
 function renderReadabilityPieAndTable(posts) {
@@ -1324,10 +1618,11 @@ function renderPostsList(posts) {
     div.className = 'post';
     div.innerHTML = `<div style="font-weight:700; font-size: 15px;">${i+1}. ${escapeHtml(p.title || '(no title)')}</div>
       <div class="small">Posted by @${p.author} on ${new Date(p.created).toLocaleString()}</div>
-      <div style="margin-top:6px"><strong>Words:</strong> ${p.wordCount} &nbsp; <strong>Images:</strong> ${p.imageCount}</div>
+      <div style="margin-top:6px"><strong>Words:</strong> ${p.wordCount} &nbsp; <strong>Images:</strong> ${p.imageCount} &nbsp; <strong>Replies:</strong> ${p.replies}</div>
+      <div style="margin-top:4px"><strong>Type:</strong> ${p.contentType}</div>
       <div style="margin-top:6px"><strong>Readability:</strong> ${p.readability.score} (Grade ${p.readability.grade}) – <em>${p.readability.explainer}</em></div>
       <div style="margin-top:8px"><a href="https://peakd.com/@${p.author}/${p.permlink}" target="_blank">View Post</a></div>`;
-    el.appendChild(div);
+    el.appendChild(div);  // ADD THIS LINE
   });
 }
 

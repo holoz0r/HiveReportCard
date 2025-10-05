@@ -4,12 +4,32 @@
 <meta charset="utf-8" />
 <title>Hive Report Card - Readability, Wordcount and more by @holoz0r</title>
 
-<!-- Hive + Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
 
 <style>
-
+.aggregation-btn {
+  background: #1e293b;
+  color: #d4dde8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.aggregation-btn:hover {
+  background: #334155;
+}
+.aggregation-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
 * { box-sizing: border-box; }
 html,body { height: 100%; }
 body {
@@ -81,8 +101,8 @@ button {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   font-size: 14px;
 }
-button:hover { 
-  transform: translateY(-1px); 
+button:hover {
+  transform: translateY(-1px);
   background: #334155;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
@@ -100,15 +120,15 @@ button.primary:hover {
 
 .filters { display:none; gap:8px; margin-top:12px; justify-content:center; flex-wrap: wrap; }
 .filters button {
-  background:#1e293b; 
-  color:#d4dde8; 
+  background:#1e293b;
+  color:#d4dde8;
   border:1px solid rgba(148, 163, 184, 0.2);
-  padding:8px 12px; 
+  padding:8px 12px;
   border-radius:8px;
 }
-.filters button.active { 
-  background: #2563eb; 
-  color:#ffffff; 
+.filters button.active {
+  background: #2563eb;
+  color:#ffffff;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
@@ -162,7 +182,7 @@ button.primary:hover {
 .chart-card.chart-full {
   grid-column: 1 / 3;
 }
-@media (max-width:960px) { 
+@media (max-width:960px) {
   .chart-card.chart-full {
     grid-column: 1;
   }
@@ -204,56 +224,56 @@ button.primary:hover {
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.15);
 }
-.table-wrap th { 
-  background: rgba(30, 41, 59, 0.8); 
-  padding:12px; 
-  font-weight:700; 
+.table-wrap th {
+  background: rgba(30, 41, 59, 0.8);
+  padding:12px;
+  font-weight:700;
   color:#ffffff;
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.5px;
 }
-.table-wrap td { 
-  padding:10px; 
-  border-top: 1px solid rgba(148, 163, 184, 0.1); 
+.table-wrap td {
+  padding:10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
   font-size: 14px;
 }
 
-.heatmap { 
-  display:flex; 
-  gap:10px; 
-  justify-content:center; 
-  align-items:flex-start; 
-  padding:8px 0; 
-  flex-wrap: wrap; 
+.heatmap {
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  align-items:flex-start;
+  padding:8px 0;
+  flex-wrap: wrap;
 }
 .heat-col { display:flex; flex-direction:column; align-items:center; gap:8px; }
-.heat-label { 
-  color:#cbd5e1; 
-  font-size:12px; 
-  margin-bottom:6px; 
-  font-weight: 600; 
-  text-transform: uppercase; 
+.heat-label {
+  color:#cbd5e1;
+  font-size:12px;
+  margin-bottom:6px;
+  font-weight: 600;
+  text-transform: uppercase;
   text-align: center;
   min-width: 50px;
 }
 .heat-cell {
-  width:50px; 
-  height:50px; 
-  border-radius:8px; 
-  display:flex; 
-  align-items:center; 
-  justify-content:center; 
-  color:#fff; 
+  width:50px;
+  height:50px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
   font-weight:700;
   transition: all .12s ease;
   border: 1px solid rgba(148, 163, 184, 0.1);
   font-size: 16px;
 }
-.heat-cell:hover { 
-  transform: translateY(-3px) scale(1.05); 
-  cursor:pointer; 
-  box-shadow: 0 6px 16px rgba(0,0,0,0.4); 
+.heat-cell:hover {
+  transform: translateY(-3px) scale(1.05);
+  cursor:pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
 }
 
 .heat-cell.small {
@@ -270,27 +290,27 @@ button.primary:hover {
 .post {
   background: rgba(30, 41, 59, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.15);
-  padding:14px; 
-  border-radius:10px; 
+  padding:14px;
+  border-radius:10px;
   margin-bottom:10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .post .small { color:#cbd5e1; font-size:13px; }
 
-.export-row { 
-  display:flex; 
-  justify-content:space-between; 
+.export-row {
+  display:flex;
+  justify-content:space-between;
   align-items: center;
-  gap:12px; 
+  gap:12px;
   margin-top:10px;
   flex-wrap: wrap;
 }
-.export-row button { 
-  background:#2563eb; 
-  color:#fff; 
-  border-radius:8px; 
-  padding:8px 12px; 
-  border: 1px solid #3b82f6; 
+.export-row button {
+  background:#2563eb;
+  color:#fff;
+  border-radius:8px;
+  padding:8px 12px;
+  border: 1px solid #3b82f6;
 }
 
 .post-filters {
@@ -329,6 +349,7 @@ html { scroll-behavior: smooth; }
       <p>The readability score is calculated using the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="_blank">Flesch-Kincaid</a> methodology.</p><br>
       <p>This tool is created as a replacement to monthly reporting which showed similar data. It polls the HIVE API live, so no need to publish something to the chain each month, just come back to the tool and check.</p><br/></br>
       <h3><a href="https://vote.hive.uno/@holoz0r" target="_blank">If you like this, Please Support @holoz0r's witness</a></h3>
+
     </div><br>
 <hr>
     <div class="controls" style="margin-top:12px;">
@@ -359,10 +380,15 @@ html { scroll-behavior: smooth; }
       <div class="card-grid" id="cardGrid"></div>
 
       <div class="charts">
-        <div class="chart-card chart-full">
-          <h3>Words and Images Per Post</h3>
-          <div class="canvas-wrap"><canvas id="chartPerPost"></canvas></div>
-          <div class="center"><button onclick="exportChartPNG(chartPerPost)">Export Chart to PNG</button></div>
+       <div class="chart-card chart-full">
+  <h3>Words and Images Per Post</h3>
+  <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+    <button class="aggregation-btn active" data-unit="day" onclick="changeAggregation('day', this)">Daily</button>
+    <button class="aggregation-btn" data-unit="week" onclick="changeAggregation('week', this)">Weekly</button>
+    <button class="aggregation-btn" data-unit="month" onclick="changeAggregation('month', this)">Monthly</button>
+    <button class="aggregation-btn" data-unit="year" onclick="changeAggregation('year', this)">Yearly</button>
+  </div>
+  <div class="canvas-wrap"><canvas id="chartPerPost"></canvas></div>
         </div>
 
         <div class="chart-card">
@@ -386,17 +412,26 @@ html { scroll-behavior: smooth; }
         </div>
 
         <div class="chart-card chart-full">
-          <h3>Words Published Over Time</h3>
-          <div class="canvas-wrap"><canvas id="chartCumulative"></canvas></div>
-          <div class="center"><button onclick="exportChartPNG(chartCumulative)">Export Chart to PNG</button></div>
-        </div>
+  <h3>Words Published Over Time</h3>
+  <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+    <button class="aggregation-btn active" data-unit="day" onclick="changeCumulativeAggregation('day', this)">Daily</button>
+    <button class="aggregation-btn" data-unit="week" onclick="changeCumulativeAggregation('week', this)">Weekly</button>
+    <button class="aggregation-btn" data-unit="month" onclick="changeCumulativeAggregation('month', this)">Monthly</button>
+    <button class="aggregation-btn" data-unit="year" onclick="changeCumulativeAggregation('year', this)">Yearly</button>
+  </div>
+  <div class="canvas-wrap"><canvas id="chartCumulative"></canvas></div>
+  </div>
 
-        <div class="chart-card chart-full">
-          <h3>Readability Over Time – click a data point to open the post</h3>
-          <div class="canvas-wrap"><canvas id="chartReadability"></canvas></div>
-          <div class="center"><button onclick="exportChartPNG(chartReadability)">Export Chart to PNG</button></div>
-        </div>
-
+<div class="chart-card chart-full">
+  <h3>Readability Over Time — click a data point to open the post</h3>
+  <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+    <button class="aggregation-btn active" data-unit="day" onclick="changeReadabilityAggregation('day', this)">Daily</button>
+    <button class="aggregation-btn" data-unit="week" onclick="changeReadabilityAggregation('week', this)">Weekly</button>
+    <button class="aggregation-btn" data-unit="month" onclick="changeReadabilityAggregation('month', this)">Monthly</button>
+    <button class="aggregation-btn" data-unit="year" onclick="changeReadabilityAggregation('year', this)">Yearly</button>
+  </div>
+  <div class="canvas-wrap"><canvas id="chartReadability"></canvas></div>
+</div>
         <div class="chart-card">
           <h3>Readability Distribution</h3>
           <div class="pie-block">
@@ -412,7 +447,7 @@ html { scroll-behavior: smooth; }
             <div id="wordDistTable" class="table-wrap"></div>
           </div>
         </div>
-		
+
 
 
 <div class="chart-card">
@@ -435,7 +470,7 @@ html { scroll-behavior: smooth; }
       </div>
 
       <div class="export-row">
-        <div class="post-filters">
+        <div class="post-filters" class="hidden">
           <label style="font-weight: 600; color: #cbd5e1; margin-right: 8px;">Filter by Level:</label>
           <button class="filter-level active" data-level="all" onclick="filterPostsByLevel('all', this)">All</button>
           <button class="filter-level" data-level="Elementary" onclick="filterPostsByLevel('Elementary', this)">Elementary</button>
@@ -469,15 +504,44 @@ let filtered = [];
 let displayedPosts = [];
 let currentRange = 'all';
 let currentLevelFilter = 'all';
+let currentAggregation = 'day';
+let currentCumulativeAggregation = 'day';
+let currentReadabilityAggregation = 'day';
 
 let chartPerPost = null;
 let chartCumulative = null;
 let chartReadability = null;
 let pieReadability = null;
 let pieWordDist = null;
-let chartEngagementReadability = null;  
-let chartEngagementWordCount = null;    
-let chartEngagementContentType = null; 
+let chartEngagementReadability = null;
+let chartEngagementWordCount = null;
+let chartEngagementContentType = null;
+
+
+function changeAggregation(unit, btn) {
+  currentAggregation = unit;
+  document.querySelectorAll('.aggregation-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const agg = computeAggregates(filtered);
+  renderPerPostChartAggregated(filtered, agg, unit);
+}
+
+function changeCumulativeAggregation(unit, btn) {
+  currentCumulativeAggregation = unit;
+  document.querySelectorAll('[onclick*="changeCumulativeAggregation"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  renderCumulativeChartAggregated(filtered, unit);
+}
+
+function changeReadabilityAggregation(unit, btn) {
+  currentReadabilityAggregation = unit;
+  document.querySelectorAll('[onclick*="changeReadabilityAggregation"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  renderReadabilityChartAggregated(filtered, unit);
+}
 
 /* ------------------------
    Helpers
@@ -577,6 +641,7 @@ async function fetchAuthoredPosts(username, mode) {
       if (!c) continue;
       if (c.author !== username) continue;
 	  if (c.permlink && /hive-\d{6}$/.test(c.permlink)) continue;
+	  if (c.body && c.body.includes('Posted via <a href="https://d.buzz" data-link="promote-link">D.Buzz</a>')) continue;
       const key = `${c.author}/${c.permlink}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -589,53 +654,132 @@ async function fetchAuthoredPosts(username, mode) {
     entryId = data[data.length - 1].entry_id + 1;
   }
 
+  collected = deduplicateByTitle(collected);
+
   return collected;
 }
+
+/* ------------------------
+   Enhanced deduplication by title
+   ------------------------ */
+function deduplicateByTitle(posts) {
+  const titleGroups = {};
+
+  // Group posts by normalized title
+  posts.forEach(item => {
+    const c = item.comment;
+    if (!c || !c.title) return;
+
+    // Normalize title: lowercase, trim, remove extra spaces
+    const normalizedTitle = c.title.toLowerCase().trim().replace(/\s+/g, ' ');
+
+    if (!titleGroups[normalizedTitle]) {
+      titleGroups[normalizedTitle] = [];
+    }
+
+    titleGroups[normalizedTitle].push(item);
+  });
+
+  const deduplicated = [];
+
+  // Process each title group
+  Object.values(titleGroups).forEach(group => {
+    if (group.length === 1) {
+      // No duplicates, keep it
+      deduplicated.push(group[0]);
+    } else {
+      // Multiple posts with same title - check dates and keep the best one
+      group.sort((a, b) => {
+        const dateA = new Date(a.comment.created);
+        const dateB = new Date(b.comment.created);
+        return dateA - dateB; // Sort oldest first
+      });
+
+      const keeper = [];
+
+      for (let i = 0; i < group.length; i++) {
+        const current = group[i];
+        const currentDate = new Date(current.comment.created);
+
+        // Check if this post is a duplicate of any keeper
+        let isDuplicate = false;
+
+        for (let j = 0; j < keeper.length; j++) {
+          const keptDate = new Date(keeper[j].comment.created);
+          const daysDiff = Math.abs((currentDate - keptDate) / (1000 * 60 * 60 * 24));
+
+          if (daysDiff <= 7) {
+            // Within 7 days - this is a duplicate/cross-post
+            isDuplicate = true;
+
+            // If current has more content, replace the keeper
+            const currentBody = current.comment.body || '';
+            const keptBody = keeper[j].comment.body || '';
+
+            if (currentBody.length > keptBody.length) {
+              keeper[j] = current;
+            }
+            break;
+          }
+        }
+
+        if (!isDuplicate) {
+          keeper.push(current);
+        }
+      }
+
+      deduplicated.push(...keeper);
+    }
+  });
+
+  return deduplicated;
+}
+
 /* ------------------------
    Enrichment (word/image/readability)
    ------------------------ */
 function cleanTextForReadability(text) {
   if (!text) return '';
-  
+
   let cleaned = text;
-  
+
   // First, extract text from markdown links [text](url) and keep only the text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-  
+
   // Remove markdown image syntax: ![alt text](url) - no text to preserve
   cleaned = cleaned.replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ');
-  
+
   // Remove standalone URLs with word boundaries to avoid eating adjacent text
   cleaned = cleaned.replace(/\bhttps?:\/\/\S+/g, ' ');
   cleaned = cleaned.replace(/\bwww\.\S+/g, ' ');
-  
+
   // Remove HTML tags but preserve the space
   cleaned = cleaned.replace(/<[^>]*>/g, ' ');
-  
+
   // Remove markdown headers (##, ###, etc) but keep the text
   cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
-  
+
   // Remove markdown bold/italic markers but keep the text
   cleaned = cleaned.replace(/(\*\*|__)(.*?)\1/g, '$2');
   cleaned = cleaned.replace(/(\*|_)(.*?)\1/g, '$2');
-  
+
   // Remove code blocks and inline code
   cleaned = cleaned.replace(/```[\s\S]*?```/g, ' ');
   cleaned = cleaned.replace(/`[^`]+`/g, ' ');
-  
+
   // Remove markdown horizontal rules
   cleaned = cleaned.replace(/^[\-*_]{3,}\s*$/gm, ' ');
-  
+
   // Remove excess whitespace and normalize
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
-  
+
   return cleaned;
 }
 
 function getImageWordRatio(imageCount, wordCount) {
   if (wordCount === 0) return imageCount > 0 ? 'Image-only' : 'Empty';
   if (imageCount === 0) return 'Text-only';
-  
+
   const ratio = wordCount / imageCount;
   if (ratio < 50) return 'Image-heavy';
   if (ratio < 200) return 'Balanced';
@@ -644,10 +788,10 @@ function getImageWordRatio(imageCount, wordCount) {
 
 function getWordCount(text) {
   if (!text) return 0;
-  
+
   const wordPattern = /\b[a-zA-Z]+(?:['-][a-zA-Z]+)*\b/g;
   const words = text.match(wordPattern);
-  
+
   return words ? words.length : 0;
 }
 
@@ -687,10 +831,10 @@ function getReadability(text) {
   const sentences = Math.max(1, countSentences(text));
   const flesch = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
   const grade = Math.round((0.39 * (words / sentences)) + (11.8 * (syllables / words)) - 15.59);
-  
+
   // Use groupReadability function to ensure consistency
   const explainer = groupReadability(flesch);
-  
+
   return { score: Number(flesch.toFixed(2)), grade, explainer };
 }
 
@@ -705,7 +849,7 @@ function enrichPosts(posts) {
 	const replies = c.children || 0;
     const created = c.created || item.created || new Date().toISOString();
     const contentType = getImageWordRatio(ic, wc);
-  
+
     return {
       author: c.author,
       permlink: c.permlink,
@@ -768,9 +912,9 @@ if (chartEngagementContentType) { chartEngagementContentType.destroy(); chartEng
 
   const agg = computeAggregates(filtered);
   renderCards(agg);
-  renderPerPostChart(filtered, agg);
-  renderCumulativeChart(filtered);
-  renderReadabilityChart(filtered);
+  renderPerPostChartAggregated(filtered, agg, currentAggregation);
+  renderCumulativeChartAggregated(filtered, currentCumulativeAggregation);
+  renderReadabilityChartAggregated(filtered, currentReadabilityAggregation);
   renderDowHeatmap(filtered);
   renderMonthHeatmap(filtered);
   renderYearHeatmap(filtered);
@@ -780,7 +924,7 @@ if (chartEngagementContentType) { chartEngagementContentType.destroy(); chartEng
   chartEngagementReadability = renderEngagementByReadability(filtered);
 chartEngagementWordCount = renderEngagementByWordCount(filtered);
 chartEngagementContentType = renderEngagementByContentType(filtered);
-  
+
   // Reset level filter and show all posts
   currentLevelFilter = 'all';
   document.querySelectorAll('.filter-level').forEach(b => b.classList.remove('active'));
@@ -799,7 +943,7 @@ function filterPostsByLevel(level, btn) {
   currentLevelFilter = level;
   document.querySelectorAll('.filter-level').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  
+
   // Only filter and render the posts list
   if (level === 'all') {
     displayedPosts = filtered.slice();
@@ -823,7 +967,7 @@ function computeAggregates(posts) {
   const avgImages = count ? (totalImages / count).toFixed(2) : 0;
   const totalReplies = posts.reduce((s,p)=> s + p.replies, 0);
   const avgReplies = count ? (totalReplies / count).toFixed(2) : 0;
-  
+
   const contentTypes = {
   'Image-heavy': posts.filter(p => p.contentType === 'Image-heavy').length,
   'Balanced': posts.filter(p => p.contentType === 'Balanced').length,
@@ -883,7 +1027,7 @@ return {
 function computeEngagementByReadability(posts) {
   const levels = ['Elementary', 'Middle School', 'High School', 'College', 'University', 'Post-Graduate', 'Professional'];
   const data = {};
-  
+
   levels.forEach(level => {
     const postsInLevel = posts.filter(p => p.readability.explainer === level);
     if (postsInLevel.length > 0) {
@@ -894,7 +1038,7 @@ function computeEngagementByReadability(posts) {
       };
     }
   });
-  
+
   return data;
 }
 
@@ -906,9 +1050,9 @@ function computeEngagementByWordCount(posts) {
     { label: '1001-2000', min: 1001, max: 2000 },
     { label: '>2000', min: 2001, max: Infinity }
   ];
-  
+
   const data = {};
-  
+
   ranges.forEach(range => {
     const postsInRange = posts.filter(p => p.wordCount >= range.min && p.wordCount <= range.max);
     if (postsInRange.length > 0) {
@@ -919,14 +1063,14 @@ function computeEngagementByWordCount(posts) {
       };
     }
   });
-  
+
   return data;
 }
 
 function computeEngagementByContentType(posts) {
   const types = ['Image-heavy', 'Balanced', 'Text-heavy', 'Text-only', 'Image-only'];
   const data = {};
-  
+
   types.forEach(type => {
     const postsOfType = posts.filter(p => p.contentType === type);
     if (postsOfType.length > 0) {
@@ -937,7 +1081,7 @@ function computeEngagementByContentType(posts) {
       };
     }
   });
-  
+
   return data;
 }
 
@@ -962,80 +1106,421 @@ function renderCards(agg) {
   const streakTo = agg.streakEnd ? formatDate(agg.streakEnd) : '-';
 
   grid.innerHTML = `
-    <div class="card"><h4>First Post</h4><p>${formatDate(agg.firstPost)}</p></div>
-    <div class="card"><h4>Most Recent Post</h4><p>${formatDate(agg.recentPost)}</p></div>
-    <div class="card"><h4>Total Posts</h4><p>${agg.postCount}</p></div>
-    <div class="card"><h4>Posts / Day</h4><p>${agg.postsPerDay}</p></div>
+    <div class="card"><h4>First Post 🗓️ </h4><p>${formatDate(agg.firstPost)}</p></div>
+    <div class="card"><h4>Most Recent Post 🗓️</h4><p>${formatDate(agg.recentPost)}</p></div>
+    <div class="card"><h4>Total Posts ✍️ </h4><p>${agg.postCount}</p></div>
+    <div class="card"><h4>Posts / Day 📝 </h4><p>${agg.postsPerDay}</p></div>
 
-    <div class="card"><h4>Longest Streak</h4><p>${agg.longestStreak} days</p></div>
-    <div class="card"><h4>Streak Period</h4><p>${streakFrom} → ${streakTo}</p></div>
-    <div class="card"><h4>Longest Break</h4><p>${agg.longestGapDays} days</p></div>
-    <div class="card"><h4>Break Period</h4><p>${gapFrom} → ${gapTo}</p></div>
+    <div class="card"><h4>Longest Streak ⏳</h4><p>${agg.longestStreak} days</p></div>
+    <div class="card"><h4>Streak Period 🏃‍♂️‍➡️ </h4><p>${streakFrom} → ${streakTo}</p></div>
+    <div class="card"><h4>Longest Break 🏖️</h4><p>${agg.longestGapDays} days</p></div>
+    <div class="card"><h4>Break Period 🛣️</h4><p>${gapFrom} → ${gapTo}</p></div>
 
-    <div class="card"><h4>Total Words</h4><p>${agg.totalWords}</p></div>
-    <div class="card"><h4>Avg Words/Post</h4><p>${agg.avgWords}</p></div>
-		<div class="card"><h4>Total Replies</h4><p>${agg.totalReplies}</p></div>
-<div class="card"><h4>Avg Replies/Post</h4><p>${agg.avgReplies}</p></div>
+    <div class="card"><h4>Total Words 📚 </h4><p>${agg.totalWords}</p></div>
+    <div class="card"><h4>Avg Words/Post 🗒️ </h4><p>${agg.avgWords}</p></div>
+		<div class="card"><h4>Total Replies 💬 </h4><p>${agg.totalReplies}</p></div>
+<div class="card"><h4>Avg Replies/Post 🗣️ </h4><p>${agg.avgReplies}</p></div>
 
-    <div class="card"><h4>Total Images</h4><p>${agg.totalImages}</p></div>
-    <div class="card"><h4>Avg Images/Post</h4><p>${agg.avgImages}</p></div>
-    <div class="card"><h4>Words Per Picture</h4><p>${wordsPerPicture}</p></div>
-    <div class="card"><h4>Pictures Per Word</h4><p>${picturesPerWord}</p></div>
-	
-<div class="card"><h4>Image-Heavy Posts</h4><p>${agg.contentTypes['Image-heavy']}</p></div>
-<div class="card"><h4>Text-Heavy Posts</h4><p>${agg.contentTypes['Text-heavy']}</p></div>
-<div class="card"><h4>Balanced Posts</h4><p>${agg.contentTypes['Balanced']}</p></div>
+    <div class="card"><h4>Total Images 🖼️</h4><p>${agg.totalImages}</p></div>
+    <div class="card"><h4>Avg Images/Post 👨‍🎨</h4><p>${agg.avgImages}</p></div>
+    <div class="card"><h4>Words Per Picture 📃 </h4><p>${wordsPerPicture}</p></div>
+    <div class="card"><h4>Pictures Per Word 🎨 </h4><p>${picturesPerWord}</p></div>
+
+<div class="card"><h4>Image-Heavy Posts 🖼️</h4><p>${agg.contentTypes['Image-heavy']}</p></div>
+<div class="card"><h4>Text-Heavy Posts📓</h4><p>${agg.contentTypes['Text-heavy']}</p></div>
+<div class="card"><h4>Balanced Posts📰</h4><p>${agg.contentTypes['Balanced']}</p></div>
 
   `;
 }
+  /* Aggregation helpers
+   ------------------------ */
+function aggregatePostsByWeek(posts) {
+  const weekMap = new Map();
+  posts.forEach(p => {
+    const date = new Date(p.dateISO);
+    // Get Monday of the week
+    const dayOfWeek = date.getDay();
+    const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(date.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    const weekKey = monday.toISOString();
 
+    if (!weekMap.has(weekKey)) {
+      weekMap.set(weekKey, { words: 0, images: 0, count: 0, posts: [] });
+    }
+    const week = weekMap.get(weekKey);
+    week.words += p.wordCount;
+    week.images += p.imageCount;
+    week.count += 1;
+    week.posts.push(p);
+  });
+
+return Array.from(weekMap.entries()).map(([date, data]) => ({
+  date,
+  words: data.words,
+  images: data.images,
+  avgWords: data.words / data.count,
+  avgImages: data.images / data.count,
+  count: data.count,
+  posts: data.posts
+})).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function aggregatePostsByMonth(posts) {
+  const monthMap = new Map();
+  posts.forEach(p => {
+    const date = new Date(p.dateISO);
+    const monthKey = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+
+    if (!monthMap.has(monthKey)) {
+      monthMap.set(monthKey, { words: 0, images: 0, count: 0, posts: [] });
+    }
+    const month = monthMap.get(monthKey);
+    month.words += p.wordCount;
+    month.images += p.imageCount;
+    month.count += 1;
+    month.posts.push(p);
+  });
+
+return Array.from(monthMap.entries()).map(([date, data]) => ({
+  date,
+  words: data.words,
+  images: data.images,
+  avgWords: data.words / data.count,
+  avgImages: data.images / data.count,
+  count: data.count,
+  posts: data.posts
+})).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function aggregatePostsByYear(posts) {
+  const yearMap = new Map();
+  posts.forEach(p => {
+    const date = new Date(p.dateISO);
+    const yearKey = new Date(date.getFullYear(), 0, 1).toISOString();
+
+    if (!yearMap.has(yearKey)) {
+      yearMap.set(yearKey, { words: 0, images: 0, count: 0, posts: [] });
+    }
+    const year = yearMap.get(yearKey);
+    year.words += p.wordCount;
+    year.images += p.imageCount;
+    year.count += 1;
+    year.posts.push(p);
+  });
+
+return Array.from(yearMap.entries()).map(([date, data]) => ({
+  date,
+  words: data.words,
+  images: data.images,
+  avgWords: data.words / data.count,
+  avgImages: data.images / data.count,
+  count: data.count,
+  posts: data.posts
+})).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+/* ------------------------
+   Render aggregated chart by time unit
+   ------------------------ */
+function renderPerPostChartAggregated(posts, agg, timeUnit) {
+  const ctx = document.getElementById('chartPerPost').getContext('2d');
+
+  let aggregated;
+  let unitDisplay, tooltipFormat;
+
+  switch(timeUnit) {
+    case 'week':
+      aggregated = aggregatePostsByWeek(posts);
+      unitDisplay = 'week';
+      tooltipFormat = '[Week of] MMM D, YYYY';
+      break;
+    case 'month':
+      aggregated = aggregatePostsByMonth(posts);
+      unitDisplay = 'month';
+      tooltipFormat = 'MMM YYYY';
+      break;
+    case 'year':
+      aggregated = aggregatePostsByYear(posts);
+      unitDisplay = 'year';
+      tooltipFormat = 'YYYY';
+      break;
+    default: // 'day'
+      // Use existing daily logic
+      renderPerPostChart(posts, agg);
+      return;
+  }
+
+  if (aggregated.length === 0) return;
+
+  // Create continuous time range with gaps
+  const minDate = new Date(aggregated[0].date).getTime();
+  const maxDate = new Date(aggregated[aggregated.length - 1].date).getTime();
+
+  // Create data points
+  const wordDataPoints = aggregated.map(a => ({
+    x: a.date,
+    y: a.words
+  }));
+
+  const imageDataPoints = aggregated.map(a => ({
+    x: a.date,
+    y: a.images
+  }));
+
+  const avgWords = Number(agg.avgWords);
+  const avgImages = Number(agg.avgImages);
+
+  // Average lines across the full date range
+  const avgWordLine = aggregated.map(a => ({ x: a.date, y: avgWords }));
+  const avgImageLine = aggregated.map(a => ({ x: a.date, y: avgImages }));
+
+  if (chartPerPost) { chartPerPost.destroy(); chartPerPost = null; }
+
+  chartPerPost = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      datasets: [
+        {
+          type:'bar',
+          label:`Words / ${timeUnit === 'day' ? 'Post' : timeUnit.charAt(0).toUpperCase() + timeUnit.slice(1)}`,
+          data: wordDataPoints,
+          backgroundColor: 'rgba(96, 165, 250, 0.8)',
+          yAxisID:'yWords',
+          barThickness: timeUnit === 'year' ? 40 : timeUnit === 'month' ? 20 : 12
+        },
+        {
+          type:'bar',
+          label:`Images / ${timeUnit === 'day' ? 'Post' : timeUnit.charAt(0).toUpperCase() + timeUnit.slice(1)}`,
+          data: imageDataPoints,
+          backgroundColor: 'rgba(52, 211, 153, 0.8)',
+          yAxisID:'yImages',
+          barThickness: timeUnit === 'year' ? 40 : timeUnit === 'month' ? 20 : 12
+        },
+        {
+          type:'line',
+          label:`Avg Words (${avgWords.toFixed(0)})`,
+          data: avgWordLine,
+          borderColor:'#f87171',
+          borderWidth: 2,
+          fill:false,
+          tension:0,
+          pointRadius:0,
+          yAxisID:'yWords'
+        },
+        {
+          type:'line',
+          label:`Avg Images (${avgImages.toFixed(1)})`,
+          data: avgImageLine,
+          borderColor:'rgba(6, 182, 212, 1)',
+          borderWidth: 2,
+          fill:false,
+          tension:0,
+          pointRadius:0,
+          yAxisID:'yImages'
+        }
+      ]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: {size: 12} } },
+        tooltip: {
+          callbacks: {
+            title: function(context) {
+              const dataIndex = context[0].dataIndex;
+              const data = aggregated[dataIndex];
+              return `${data.count} post${data.count > 1 ? 's' : ''}`;
+            }
+          }
+        },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: timeUnit === 'year' ? 1000 * 60 * 60 * 24 * 365 :
+                        timeUnit === 'month' ? 1000 * 60 * 60 * 24 * 30 :
+                        1000 * 60 * 60 * 24 * 7
+            }
+          }
+        }
+      },
+      scales: {
+        yWords: {
+          position:'left',
+          title:{display:true, text:'Words', color: '#d4dde8', font: {size: 13}},
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        yImages: {
+          position:'right',
+          title:{display:true, text:'Images', color: '#d4dde8', font: {size: 13}},
+          grid:{ drawOnChartArea:false },
+          ticks: { color: '#cbd5e1' }
+        },
+        x: {
+          type: 'time',
+          time: {
+            unit: unitDisplay,
+            tooltipFormat: tooltipFormat,
+            displayFormats: {
+              week: 'MMM D',
+              month: 'MMM YYYY',
+              year: 'YYYY'
+            }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      }
+    }
+  });
+}
 /* ------------------------
    Chart: per-post words/images (dual axes)
    ------------------------ */
 function renderPerPostChart(posts, agg) {
   const ctx = document.getElementById('chartPerPost').getContext('2d');
 
-  const sorted = posts.slice().reverse();
-  const labels = sorted.map(p => isoDay(p.dateObj));
-  const words = sorted.map(p => p.wordCount);
-  const images = sorted.map(p => p.imageCount);
-  const avgLine = Array(words.length).fill(Number(agg.avgWords));
+  // Sort posts by date ascending for correct chronological display
+  const sorted = posts.slice().sort((a,b) => a.dateObj - b.dateObj);
+
+  // Group posts by day and create offset bars for words and images
+  const dailyData = new Map();
+  sorted.forEach(p => {
+    const dayKey = p.dateISO.split('T')[0]; // Get just the date part
+    if (!dailyData.has(dayKey)) {
+      dailyData.set(dayKey, []);
+    }
+    dailyData.get(dayKey).push(p);
+  });
+
+  // Create data points with slight time offset for side-by-side bars
+  const wordDataPoints = [];
+  const imageDataPoints = [];
+
+  Array.from(dailyData.keys()).sort().forEach(dayKey => {
+    const postsOnDay = dailyData.get(dayKey);
+    postsOnDay.forEach((p, idx) => {
+      const baseTime = new Date(p.dateISO).getTime();
+      // Offset bars slightly: words slightly before, images slightly after the actual time
+      const offset = 1000 * 60 * 30; // 30 minutes offset
+      wordDataPoints.push({
+        x: new Date(baseTime - offset).toISOString(),
+        y: p.wordCount
+      });
+      imageDataPoints.push({
+        x: new Date(baseTime + offset).toISOString(),
+        y: p.imageCount
+      });
+    });
+  });
+
+  const avgWords = Number(agg.avgWords);
+  const avgImages = Number(agg.avgImages);
+
+  const avgWordLine = sorted.map(p => ({ x: p.dateISO, y: avgWords }));
+  const avgImageLine = sorted.map(p => ({ x: p.dateISO, y: avgImages }));
+
+  // Calculate Min/Max Dates for Zoom Limits - convert to timestamps
+  const minDate = sorted[0] ? new Date(sorted[0].dateISO).getTime() : Date.now();
+  const maxDate = sorted[sorted.length - 1] ? new Date(sorted[sorted.length - 1].dateISO).getTime() : Date.now();
+
+  // Destroy existing chart instance if it exists
+  if (chartPerPost) { chartPerPost.destroy(); chartPerPost = null; }
 
   chartPerPost = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels,
       datasets: [
-        { type:'bar', label:'Words / Post', data: words, backgroundColor: 'rgba(96, 165, 250, 0.8)', yAxisID:'yWords' },
-        { type:'line', label:'Avg Words', data: avgLine, borderColor:'#f87171', borderWidth: 2, fill:false, tension:0.2, pointRadius:0, yAxisID:'yWords' },
-        { type:'bar', label:'Images / Post', data: images, backgroundColor: 'rgba(52, 211, 153, 0.8)', yAxisID:'yImages' }
+        {
+            type:'bar', label:'Words / Post', data: wordDataPoints, backgroundColor: 'rgba(96, 165, 250, 0.8)', yAxisID:'yWords',
+            barThickness: 8,
+            maxBarThickness: 12
+        },
+        {
+            type:'bar', label:'Images / Post', data: imageDataPoints, backgroundColor: 'rgba(52, 211, 153, 0.8)', yAxisID:'yImages',
+            barThickness: 8,
+            maxBarThickness: 12
+        },
+        {
+            type:'line', label:`Avg Words (${avgWords.toFixed(0)})`, data: avgWordLine, borderColor:'#f87171', borderWidth: 2, fill:false, tension:0, pointRadius:0, yAxisID:'yWords', skipGaps: true
+        },
+        {
+            type:'line', label:`Avg Images (${avgImages.toFixed(1)})`, data: avgImageLine, borderColor:'rgba(6, 182, 212, 1)', borderWidth: 2, fill:false, tension:0, pointRadius:0, yAxisID:'yImages', skipGaps: true
+        }
       ]
     },
     options: {
-      responsive:true, 
+      responsive:true,
       maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: {size: 12} } },
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: 1000 * 60 * 60 * 24 * 7 // 7 days min range
+            }
+          }
+        }
+      },
       scales: {
-        yWords: { 
-          position:'left', 
+        yWords: {
+          position:'left',
           title:{display:true, text:'Words', color: '#d4dde8', font: {size: 13}},
           ticks: { color: '#cbd5e1' },
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
         },
-        yImages: { 
-          position:'right', 
-          title:{display:true, text:'Images', color: '#d4dde8', font: {size: 13}}, 
+        yImages: {
+          position:'right',
+          title:{display:true, text:'Images', color: '#d4dde8', font: {size: 13}},
           grid:{ drawOnChartArea:false },
           ticks: { color: '#cbd5e1' }
         },
         x: {
-          ticks: { color: '#cbd5e1' },
+          type: 'time',
+          time: {
+            unit: 'day',
+            tooltipFormat: 'MMM D, YYYY HH:mm',
+            displayFormats: { day: 'MMM D', month: 'MMM YYYY', hour: 'MMM D HH:mm' }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
-        }
-      },
-      plugins: {
-        legend: {
-          labels: { color: '#f0f4f8', font: {size: 12} }
         }
       }
     }
@@ -1049,43 +1534,51 @@ function renderCumulativeChart(posts) {
   const ctx = document.getElementById('chartCumulative').getContext('2d');
 
   const map = new Map();
-  posts.forEach(p => {
-    const key = isoDay(p.dateObj);
+  // Sort posts by date ascending for correct cumulative calculation
+  const sortedPosts = posts.slice().sort((a,b) => a.dateObj - b.dateObj);
+
+  sortedPosts.forEach(p => {
+    // Use the full ISO date string which includes time for better resolution
+    const key = p.dateISO;
     map.set(key, (map.get(key) || 0) + p.wordCount);
   });
 
-  const dayKeys = Array.from(map.keys()).sort();
-  if (dayKeys.length === 0) return;
+  const allDates = sortedPosts.map(p => p.dateISO); // Use all post dates for plotting points
+  if (allDates.length === 0) return;
 
-  const labels = [];
-  const daily = [];
-  const first = new Date(dayKeys[0]);
-  const last = new Date(dayKeys[dayKeys.length - 1]);
-  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
-    const k = d.toISOString().slice(0,10);
-    labels.push(k);
-    daily.push(map.get(k) || 0);
+  // Calculate Min/Max Dates for Zoom Limits - convert to timestamps
+  const minDate = sortedPosts[0] ? new Date(sortedPosts[0].dateISO).getTime() : Date.now();
+  const maxDate = sortedPosts[sortedPosts.length - 1] ? new Date(sortedPosts[sortedPosts.length - 1].dateISO).getTime() : Date.now();
+
+  // Prepare data points as {x: date, y: cumulative_words}
+  const dataPoints = [];
+  let cumulativeWords = 0;
+  for (let i = 0; i < sortedPosts.length; i++) {
+      cumulativeWords += sortedPosts[i].wordCount;
+      dataPoints.push({
+          x: sortedPosts[i].dateISO,
+          y: cumulativeWords
+      });
   }
 
-  const cum = [];
-  daily.reduce((acc,val,i) => { const n = acc + val; cum[i] = n; return n; }, 0);
+  // Destroy existing chart instance if it exists
+  if (chartCumulative) { chartCumulative.destroy(); chartCumulative = null; }
 
   chartCumulative = new Chart(ctx, {
     type:'line',
-    data: { 
-      labels, 
-      datasets:[{ 
-        label:'Cumulative Words', 
-        data:cum, 
-        fill:true, 
-        backgroundColor:'rgba(96, 165, 250, 0.2)', 
+    data: {
+      datasets:[{
+        label:'Cumulative Words',
+        data: dataPoints,
+        fill:true,
+        backgroundColor:'rgba(96, 165, 250, 0.2)',
         borderColor:'rgba(96, 165, 250, 0.9)',
         borderWidth: 2,
         tension: 0.3
-      }] 
+      }]
     },
-    options: { 
-      responsive:true, 
+    options: {
+      responsive:true,
       maintainAspectRatio:false,
       scales: {
         y: {
@@ -1093,11 +1586,44 @@ function renderCumulativeChart(posts) {
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
         },
         x: {
-          ticks: { color: '#cbd5e1' },
+          type: 'time',
+          time: {
+            unit: 'day',
+            tooltipFormat: 'MMM D, YYYY',
+            displayFormats: {
+              day: 'MMM D',
+              month: 'MMM YYYY'
+            }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
         }
       },
       plugins: {
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: 1000 * 60 * 60 * 24 * 7
+            }
+          }
+        },
         legend: {
           labels: { color: '#f0f4f8', font: {size: 12} }
         }
@@ -1112,9 +1638,13 @@ function renderCumulativeChart(posts) {
 function renderReadabilityChart(posts) {
   const ctx = document.getElementById('chartReadability').getContext('2d');
 
-  const pointMeta = posts.slice().reverse().map(p => {
+  // Sort posts by date ascending for correct chronological display
+  const sortedPosts = posts.slice().sort((a,b) => a.dateObj - b.dateObj);
+
+  const pointMeta = sortedPosts.map(p => {
     return {
-      label: `${isoDay(p.dateObj)} ${p.dateObj.toLocaleTimeString()}`,
+      // Use dateISO for accurate time plotting
+      x: p.dateISO,
       y: p.readability.score,
       title: p.title,
       score: p.readability.score,
@@ -1125,22 +1655,26 @@ function renderReadabilityChart(posts) {
     };
   });
 
-  const labels = pointMeta.map(m => m.label);
-  const data = pointMeta.map(m => m.y);
+  const dataPoints = pointMeta.map(m => ({ x: m.x, y: m.y }));
 
-  // Calculate min and max for auto-scaling
-  const minScore = Math.min(...data);
-  const maxScore = Math.max(...data);
-  const yMin = Math.floor(Math.min(minScore - 5, 0)); // Add padding, allow negatives
+  const minScore = Math.min(...dataPoints.map(p => p.y));
+  const maxScore = Math.max(...dataPoints.map(p => p.y));
+  const yMin = Math.floor(Math.min(minScore - 5, 0));
   const yMax = Math.ceil(Math.max(maxScore + 5, 100));
+
+  // Calculate Min/Max Dates for Zoom Limits - convert to timestamps
+  const minDate = sortedPosts[0] ? new Date(sortedPosts[0].dateISO).getTime() : Date.now();
+  const maxDate = sortedPosts[sortedPosts.length - 1] ? new Date(sortedPosts[sortedPosts.length - 1].dateISO).getTime() : Date.now();
+
+  // Destroy existing chart instance if it exists
+  if (chartReadability) { chartReadability.destroy(); chartReadability = null; }
 
   chartReadability = new Chart(ctx, {
     type:'line',
     data: {
-      labels,
       datasets:[{
         label:'Flesch Reading Ease Score',
-        data: data,
+        data: dataPoints,
         pointBackgroundColor: 'rgba(168, 85, 247, 0.9)',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 1,
@@ -1153,7 +1687,7 @@ function renderReadabilityChart(posts) {
       }]
     },
     options: {
-      responsive:true, 
+      responsive:true,
       maintainAspectRatio:false,
       scales: {
         y: {
@@ -1164,19 +1698,52 @@ function renderReadabilityChart(posts) {
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
         },
         x: {
-          ticks: { maxRotation:45, minRotation:0, color: '#cbd5e1' },
+          type: 'time',
+          time: {
+            unit: 'day',
+            tooltipFormat: 'MMM D, YYYY HH:mm',
+            displayFormats: {
+              day: 'MMM D',
+              month: 'MMM YYYY',
+              hour: 'MMM D HH:mm'
+            }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
           grid: { color: 'rgba(148, 163, 184, 0.1)' }
         }
       },
       plugins: {
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: 1000 * 60 * 60 * 24 * 7
+            }
+          }
+        },
         legend: {
           labels: { color: '#f0f4f8', font: {size: 12} }
         },
         tooltip: {
           callbacks: {
             label: function(ctx) {
-              const i = ctx.dataIndex;
-              const m = pointMeta[i];
+              const m = pointMeta[ctx.dataIndex];
               return [
                 `${m.title || '(no title)'}`,
                 `Score: ${m.score} (Grade ${m.grade})`,
@@ -1208,6 +1775,281 @@ function renderReadabilityChart(posts) {
 }
 
 /* ------------------------
+   Chart: cumulative words aggregated
+   ------------------------ */
+function renderCumulativeChartAggregated(posts, timeUnit) {
+  const ctx = document.getElementById('chartCumulative').getContext('2d');
+
+  if (timeUnit === 'day') {
+    renderCumulativeChart(posts);
+    return;
+  }
+
+  let aggregated;
+  let unitDisplay, tooltipFormat;
+
+  switch(timeUnit) {
+    case 'week':
+      aggregated = aggregatePostsByWeek(posts);
+      unitDisplay = 'week';
+      tooltipFormat = '[Week of] MMM D, YYYY';
+      break;
+    case 'month':
+      aggregated = aggregatePostsByMonth(posts);
+      unitDisplay = 'month';
+      tooltipFormat = 'MMM YYYY';
+      break;
+    case 'year':
+      aggregated = aggregatePostsByYear(posts);
+      unitDisplay = 'year';
+      tooltipFormat = 'YYYY';
+      break;
+  }
+
+  if (aggregated.length === 0) return;
+
+  const minDate = new Date(aggregated[0].date).getTime();
+  const maxDate = new Date(aggregated[aggregated.length - 1].date).getTime();
+
+  // Calculate cumulative words
+  const dataPoints = [];
+  let cumulativeWords = 0;
+  aggregated.forEach(a => {
+    cumulativeWords += a.words;
+    dataPoints.push({
+      x: a.date,
+      y: cumulativeWords
+    });
+  });
+
+  if (chartCumulative) { chartCumulative.destroy(); chartCumulative = null; }
+
+  chartCumulative = new Chart(ctx, {
+    type:'line',
+    data: {
+      datasets:[{
+        label:'Cumulative Words',
+        data: dataPoints,
+        fill:true,
+        backgroundColor:'rgba(96, 165, 250, 0.2)',
+        borderColor:'rgba(96, 165, 250, 0.9)',
+        borderWidth: 2,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      scales: {
+        y: {
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          type: 'time',
+          time: {
+            unit: unitDisplay,
+            tooltipFormat: tooltipFormat,
+            displayFormats: {
+              week: 'MMM D',
+              month: 'MMM YYYY',
+              year: 'YYYY'
+            }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: timeUnit === 'year' ? 1000 * 60 * 60 * 24 * 365 :
+                        timeUnit === 'month' ? 1000 * 60 * 60 * 24 * 30 :
+                        1000 * 60 * 60 * 24 * 7
+            }
+          }
+        },
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        }
+      }
+    }
+  });
+}
+
+/* ------------------------
+   Chart: readability aggregated
+   ------------------------ */
+function renderReadabilityChartAggregated(posts, timeUnit) {
+  const ctx = document.getElementById('chartReadability').getContext('2d');
+
+  if (timeUnit === 'day') {
+    renderReadabilityChart(posts);
+    return;
+  }
+
+  let aggregated;
+  let unitDisplay, tooltipFormat;
+
+  switch(timeUnit) {
+    case 'week':
+      aggregated = aggregatePostsByWeek(posts);
+      unitDisplay = 'week';
+      tooltipFormat = '[Week of] MMM D, YYYY';
+      break;
+    case 'month':
+      aggregated = aggregatePostsByMonth(posts);
+      unitDisplay = 'month';
+      tooltipFormat = 'MMM YYYY';
+      break;
+    case 'year':
+      aggregated = aggregatePostsByYear(posts);
+      unitDisplay = 'year';
+      tooltipFormat = 'YYYY';
+      break;
+  }
+
+  if (aggregated.length === 0) return;
+
+  const minDate = new Date(aggregated[0].date).getTime();
+  const maxDate = new Date(aggregated[aggregated.length - 1].date).getTime();
+
+ // Calculate average readability for each period
+const dataPoints = aggregated.map(a => {
+  const postsInPeriod = a.posts || [];
+  if (postsInPeriod.length === 0) {
+    return { x: a.date, y: 0 };
+  }
+  const avgScore = postsInPeriod.reduce((sum, p) => sum + p.readability.score, 0) / postsInPeriod.length;
+  return {
+    x: a.date,
+    y: avgScore
+  };
+});
+
+  const allScores = dataPoints.map(p => p.y);
+  const minScore = Math.min(...allScores);
+  const maxScore = Math.max(...allScores);
+  const yMin = Math.floor(Math.min(minScore - 5, 0));
+  const yMax = Math.ceil(Math.max(maxScore + 5, 100));
+
+  if (chartReadability) { chartReadability.destroy(); chartReadability = null; }
+
+  chartReadability = new Chart(ctx, {
+    type:'line',
+    data: {
+      datasets:[{
+        label:'Average Flesch Reading Ease Score',
+        data: dataPoints,
+        pointBackgroundColor: 'rgba(168, 85, 247, 0.9)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 1,
+        borderColor: 'rgba(168, 85, 247, 0.4)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        fill:true,
+        tension:0.3,
+        pointRadius:5,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      scales: {
+        y: {
+          title: { display: true, text: 'Avg Flesch Score', color: '#d4dde8', font: {size: 13} },
+          min: yMin,
+          max: yMax,
+          ticks: { color: '#cbd5e1' },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: {
+          type: 'time',
+          time: {
+            unit: unitDisplay,
+            tooltipFormat: tooltipFormat,
+            displayFormats: {
+              week: 'MMM D',
+              month: 'MMM YYYY',
+              year: 'YYYY'
+            }
+          },
+          min: minDate,
+          max: maxDate,
+          ticks: {
+            color: '#cbd5e1',
+            autoSkip: true,
+            maxTicksLimit: 20
+          },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        }
+      },
+      plugins: {
+        zoom: {
+          zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode: 'x',
+          },
+          pan: {
+            enabled: true,
+            mode: 'x'
+          },
+          limits: {
+            x: {
+              min: minDate,
+              max: maxDate,
+              minRange: timeUnit === 'year' ? 1000 * 60 * 60 * 24 * 365 :
+                        timeUnit === 'month' ? 1000 * 60 * 60 * 24 * 30 :
+                        1000 * 60 * 60 * 24 * 7
+            }
+          }
+        },
+        legend: {
+          labels: { color: '#f0f4f8', font: {size: 12} }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const idx = ctx.dataIndex;
+              const period = aggregated[idx];
+              return [
+                `Avg Score: ${ctx.parsed.y.toFixed(2)}`,
+                `Posts: ${period.count}`
+              ];
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1,
+          padding: 12
+        }
+      }
+    }
+  });
+}
+
+/* ------------------------
    Heatmap: daily counts Mon..Sun
    ------------------------ */
 function renderDowHeatmap(posts) {
@@ -1216,7 +2058,7 @@ function renderDowHeatmap(posts) {
 
   const counts = {0:0,1:0,2:0,3:0,4:0,5:0,6:0};
   posts.forEach(p => {
-    const d = p.dateObj.getDay(); 
+    const d = p.dateObj.getDay();
     counts[d] = (counts[d] || 0) + 1;
   });
 
@@ -1318,7 +2160,7 @@ function renderHourHeatmap(posts) {
 
   const counts = {};
   for (let h = 0; h < 24; h++) counts[h] = 0;
-  
+
   posts.forEach(p => {
     const h = p.dateObj.getHours();
     counts[h] = (counts[h] || 0) + 1;
@@ -1350,11 +2192,11 @@ function renderHourHeatmap(posts) {
 function renderEngagementByReadability(posts) {
   const ctx = document.getElementById('chartEngagementReadability').getContext('2d');
   const data = computeEngagementByReadability(posts);
-  
+
   const labels = Object.keys(data);
   const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
   const counts = labels.map(label => data[label].count);
-  
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -1405,10 +2247,10 @@ function renderEngagementByReadability(posts) {
 function renderEngagementByWordCount(posts) {
   const ctx = document.getElementById('chartEngagementWordCount').getContext('2d');
   const data = computeEngagementByWordCount(posts);
-  
+
   const labels = Object.keys(data);
   const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
-  
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -1459,10 +2301,10 @@ function renderEngagementByWordCount(posts) {
 function renderEngagementByContentType(posts) {
   const ctx = document.getElementById('chartEngagementContentType').getContext('2d');
   const data = computeEngagementByContentType(posts);
-  
+
   const labels = Object.keys(data);
   const avgReplies = labels.map(label => parseFloat(data[label].avgReplies));
-  
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -1534,13 +2376,13 @@ function renderReadabilityPieAndTable(posts) {
   const ctx = document.getElementById('pieReadability').getContext('2d');
   const pieLabels = orderedLevels.filter(k => counts[k]);
   const pieData = pieLabels.map(k => counts[k]);
-  
+
   pieReadability = new Chart(ctx, {
     type:'pie',
-    data: { 
-      labels: pieLabels, 
-      datasets:[{ 
-        data: pieData, 
+    data: {
+      labels: pieLabels,
+      datasets:[{
+        data: pieData,
         backgroundColor:[
           '#60a5fa',
           '#34d399',
@@ -1552,10 +2394,10 @@ function renderReadabilityPieAndTable(posts) {
         ],
         borderColor: '#1e293b',
         borderWidth: 2
-      }] 
+      }]
     },
-    options: { 
-      responsive:true, 
+    options: {
+      responsive:true,
       maintainAspectRatio:false,
       plugins: {
         legend: {
@@ -1586,17 +2428,17 @@ function renderWordDistPieAndTable(posts) {
   const ctx = document.getElementById('pieWordDist').getContext('2d');
   pieWordDist = new Chart(ctx, {
     type:'pie',
-    data: { 
-      labels:Object.keys(buckets), 
-      datasets:[{ 
-        data:Object.values(buckets), 
+    data: {
+      labels:Object.keys(buckets),
+      datasets:[{
+        data:Object.values(buckets),
         backgroundColor:['#60a5fa','#34d399','#fbbf24','#fb923c','#f87171','#a78bfa'],
         borderColor: '#1e293b',
         borderWidth: 2
-      }] 
+      }]
     },
-    options: { 
-      responsive:true, 
+    options: {
+      responsive:true,
       maintainAspectRatio:false,
       plugins: {
         legend: {
@@ -1657,20 +2499,20 @@ function exportCSV() {
     rows.push(line.join(','));
   });
   const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a'); 
-  a.href = URL.createObjectURL(blob); 
-  a.download = 'hive_posts.csv'; 
-  a.click(); 
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hive_posts.csv';
+  a.click();
   a.remove();
 }
 
 function exportJSON() {
   if (!displayedPosts || !displayedPosts.length) return alert('No posts to export');
   const blob = new Blob([JSON.stringify(displayedPosts, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); 
-  a.href = URL.createObjectURL(blob); 
-  a.download = 'hive_posts.json'; 
-  a.click(); 
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hive_posts.json';
+  a.click();
   a.remove();
 }
 

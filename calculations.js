@@ -2,18 +2,19 @@ export function cleanTextForReadability(text) {
   if (!text) return '';
 
   let cleaned = text;
-  cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-  cleaned = cleaned.replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ');
-  cleaned = cleaned.replace(/\bhttps?:\/\/\S+/g, ' ');
-  cleaned = cleaned.replace(/\bwww\.\S+/g, ' ');
-  cleaned = cleaned.replace(/<[^>]*>/g, ' ');
-  cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
-  cleaned = cleaned.replace(/(\*\*|__)(.*?)\1/g, '$2');
-  cleaned = cleaned.replace(/(\*|_)(.*?)\1/g, '$2');
-  cleaned = cleaned.replace(/```[\s\S]*?```/g, ' ');
-  cleaned = cleaned.replace(/`[^`]+`/g, ' ');
-  cleaned = cleaned.replace(/^[\-*_]{3,}\s*$/gm, ' ');
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  cleaned = cleaned.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');  // Keep link text
+  cleaned = cleaned.replace(/!\[[^\]]*\]\([^\)]+\)/g, ' ');    // Remove images
+  cleaned = cleaned.replace(/\bhttps?:\/\/\S+/g, ' ');         // Remove URLs
+  cleaned = cleaned.replace(/\bwww\.\S+/g, ' ');               // Remove www URLs
+  cleaned = cleaned.replace(/<[^>]*>/g, ' ');                  // Remove HTML
+  cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');               // Remove headers
+  cleaned = cleaned.replace(/(\*\*|__)(.*?)\1/g, '$2');        // Remove bold
+  cleaned = cleaned.replace(/(\*|_)(.*?)\1/g, '$2');           // Remove italic
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, ' ');           // Remove code blocks
+  cleaned = cleaned.replace(/`[^`]+`/g, '$1');                 // Changed: Keep inline code text
+  cleaned = cleaned.replace(/^[\-*_]{3,}\s*$/gm, ' ');         // Remove horizontal rules
+  cleaned = cleaned.replace(/[<>]/g, ' ');                     // Add: Remove stray < >
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();               // LOVE REGEX SO MUCH! (NOT!)
 
   return cleaned;
 }

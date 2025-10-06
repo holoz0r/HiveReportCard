@@ -139,6 +139,95 @@ export function renderCards(agg, filtered) {
   `;
 }
 
+export function renderBreaksStreaksTable(posts) {
+  const container = document.getElementById('breaksStreaksTable');
+  if (!container) return;
+  if (!posts || posts.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // sort ascending by created
+  const byAsc = [...posts].sort((a, b) => new Date(a.created) - new Date(b.created));
+
+  // compute gaps (breaks) between consecutive posts
+  const gaps = [];
+  for (let i = 1; i < byAsc.length; i++) {
+    const prev = new Date(byAsc[i - 1].created);
+    const curr = new Date(byAsc[i].created);
+    const days = Math.floor((curr - prev) / 86400000);
+    if (days > 0) gaps.push({ from: prev, to: curr, days });
+  }
+  gaps.sort((a, b) => b.days - a.days);
+  const topGaps = gaps.slice(0, 5);
+
+  // compute streaks (consecutive posting days)
+  const daySet = Array.from(new Set(byAsc.map(p => (new Date(p.created)).toISOString().slice(0, 10)))).sort();
+  const streaks = [];
+  if (daySet.length) {
+    let curStart = new Date(daySet[0]);
+    let curLen = 1;
+    for (let i = 1; i < daySet.length; i++) {
+      const prev = new Date(daySet[i - 1]);
+      const curr = new Date(daySet[i]);
+      const diff = Math.round((curr - prev) / 86400000);
+      if (diff === 1) {
+        curLen++;
+      } else {
+        streaks.push({ start: curStart, end: prev, len: curLen });
+        curStart = curr;
+        curLen = 1;
+      }
+    }
+    const lastDay = new Date(daySet[daySet.length - 1]);
+    streaks.push({ start: curStart, end: lastDay, len: curLen });
+  }
+  streaks.sort((a, b) => b.len - a.len);
+  const topStreaks = streaks.slice(0, 5);
+
+  // helper for date formatting
+  const fmt = d => d ? formatDate(d) : '-';
+
+  // build HTML (two small tables side-by-side on wide screens)
+  let html = `<div style="display:flex;flex-wrap:wrap;gap:12px">`;
+
+  // Top Breaks
+  html += `<div style="min-width:260px;flex:1">
+    <h4 style="text-align:center">Top 5 Longest Breaks</h4>
+    <table>
+      <thead><tr><th>From</th><th>To</th><th style="text-align:right">Days</th></tr></thead>
+      <tbody>`;
+  if (topGaps.length === 0) {
+    html += `<tr><td colspan="3">No breaks found</td></tr>`;
+  } else {
+    topGaps.forEach(g => {
+      html += `<tr><td>${fmt(g.from)}</td><td>${fmt(g.to)}</td><td style="text-align:right">${g.days}</td></tr>`;
+    });
+  }
+  html += `</tbody></table></div>`;
+
+  // Top Streaks
+  html += `<div style="min-width:260px;flex:1">
+    <h4 style="text-align:center">Top 5 Longest Streaks</h4>
+    <table>
+      <thead><tr><th>Start</th><th>End</th><th style="text-align:right">Days</th></tr></thead>
+      <tbody>`;
+  if (topStreaks.length === 0) {
+    html += `<tr><td colspan="3">No streaks found</td></tr>`;
+  } else {
+    topStreaks.forEach(s => {
+      html += `<tr><td>${fmt(s.start)}</td><td>${fmt(s.end)}</td><td style="text-align:right">${s.len}</td></tr>`;
+    });
+  }
+  html += `</tbody></table></div>`;
+
+  html += `</div>`; // end flex
+
+  container.innerHTML = html;
+}
+
+// ...existing code...
+
 export function renderDowHeatmap(posts) {
   const container = document.getElementById('heatmap');
   container.innerHTML = '';

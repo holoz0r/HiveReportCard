@@ -33,6 +33,7 @@ import {
   exportCSV,
   exportJSON,
   exportChartByCanvasId,
+  renderBreaksStreaksTable,
   resetZoom
 } from './ui.js';
 
@@ -56,6 +57,7 @@ let pieWordDist = null;
 let chartEngagementReadability = null;
 let chartEngagementWordCount = null;
 let chartEngagementContentType = null;
+let chartContentTypePie = null;
 
 // Main fetch function
 async function startFetch(mode) {
@@ -140,7 +142,8 @@ function renderAll() {
 
   const agg = computeAggregates(filtered);
   renderCards(agg, filtered);
-  
+  renderBreaksStreaksTable(filtered);
+
   chartPerPost = renderPerPostChartAggregated(
     filtered, 
     agg, 

@@ -29,7 +29,8 @@ export function getWordCount(text) {
 
 export function getImageCount(text) {
   if (!text) return 0;
-  return (text.match(/\.(jpg|jpeg|png|gif|webp)/gi) || []).length;
+  const count = (text.match(/\.(jpg|jpeg|png|gif|webp|webm|tiff|bmp|svg)/gi) || []).length/2;
+  return Math.ceil(count);
 }
 
 function countSyllablesInWord(w) {
@@ -117,4 +118,5 @@ export function enrichPosts(posts) {
   });
   out.sort((a, b) => new Date(b.created) - new Date(a.created));
   return out;
+
 }

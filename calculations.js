@@ -1,5 +1,3 @@
-// js/calculations.js
-
 export function cleanTextForReadability(text) {
   if (!text) return '';
 
@@ -21,17 +19,19 @@ export function cleanTextForReadability(text) {
 }
 
 export function getWordCount(text) {
-  if (!text) return 0;
-  const wordPattern = /\b[a-zA-Z]+(?:['-][a-zA-Z]+)*\b/g;
-  const words = text.match(wordPattern);
-  return words ? words.length : 0;
+  if (!text || typeof text !== 'string') return 0;
+  
+  const words = text.trim().split(/\s+/);
+  return words.length;
 }
+
 
 export function getImageCount(text) {
   if (!text) return 0;
   const count = (text.match(/\.(jpg|jpeg|png|gif|webp|webm|tiff|bmp|svg)/gi) || []).length/2;
   return Math.ceil(count);
 }
+
 
 function countSyllablesInWord(w) {
   w = (w || '').toLowerCase().replace(/[^a-z]/g, '');
@@ -94,7 +94,7 @@ export function enrichPosts(posts) {
     const c = item.comment || {};
     const body = c.body || '';
     const cleanedBody = cleanTextForReadability(body);
-    const wc = getWordCount(cleanedBody);
+    const wc = getWordCount(body);
     const ic = getImageCount(body);
     const r = getReadability(cleanedBody);
     const replies = c.children || 0;
@@ -118,5 +118,4 @@ export function enrichPosts(posts) {
   });
   out.sort((a, b) => new Date(b.created) - new Date(a.created));
   return out;
-
 }

@@ -2,6 +2,8 @@
 ![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23y8qiijNmCc2KM1LLRUY3BdqnULD1NkQMWUHynadUq5gCKrwKNAQnkPkFacEoX5ZFMhb.png)
 
 
+## [Use the Tool Here](https://holoz0r.github.io/HiveReportCard/)
+
 <h3>Introduction</h3>
 
 Hello! Over the last few months, I have been conducting some analytics the quality of content on HIVE. As no one author can be directly compared to another, because we all have our unique styles and posting niches, I have instead decided to build a tool that has many use cases. 

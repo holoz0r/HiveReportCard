@@ -13,7 +13,8 @@ import {
   renderWordDistPie,
   renderEngagementByReadability,
   renderEngagementByWordCount,
-  renderEngagementByContentType
+  renderEngagementByContentType,
+  renderContentTypePie
 } from './charts.js';
 import {
   setStatus,
@@ -179,6 +180,7 @@ function renderAll() {
   chartEngagementReadability = renderEngagementByReadability(filtered);
   chartEngagementWordCount = renderEngagementByWordCount(filtered);
   chartEngagementContentType = renderEngagementByContentType(filtered);
+  chartContentTypePie = renderContentTypePie(filtered);
 
   // Reset level filter and show all posts
   currentLevelFilter = 'all';

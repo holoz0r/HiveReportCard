@@ -121,7 +121,11 @@
             <div id="readabilityTable" class="table-wrap"></div>
           </div>
         </div>
-
+<div class="chart-card">
+  <h3>Engagement by Readability Level</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementReadability"></canvas></div>
+  <div class="center"><button onclick="exportChartPNG(chartEngagementReadability)">Export Chart to PNG</button></div>
+</div>
         <div class="chart-card">
           <h3>Word Count Distribution</h3>
           <div class="pie-block">
@@ -130,19 +134,18 @@
           </div>
         </div>
 
-
-
-<div class="chart-card">
-  <h3>Engagement by Readability Level</h3>
-  <div class="canvas-wrap"><canvas id="chartEngagementReadability"></canvas></div>
-  <div class="center"><button onclick="exportChartPNG(chartEngagementReadability)">Export Chart to PNG</button></div>
-</div>
-
 <div class="chart-card">
   <h3>Engagement by Word Count</h3>
   <div class="canvas-wrap"><canvas id="chartEngagementWordCount"></canvas></div>
   <div class="center"><button onclick="exportChartPNG(chartEngagementWordCount)">Export Chart to PNG</button></div>
 </div>
+
+<div class="chart-card">
+  <h3>Content Type Distribution</h3>
+  <div class="pie-block">
+    <canvas id="pieContentType" width="360" height="220"></canvas>
+    <div id="pieContentTypeTable" class="table-wrap"></div>
+  </div></div>
 
 <div class="chart-card">
   <h3>Engagement by Content Type</h3>

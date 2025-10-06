@@ -929,6 +929,93 @@ export function renderEngagementByWordCount(posts) {
   });
 }
 
+export function renderContentTypePie(posts) {
+  const types = ['Image-heavy', 'Balanced', 'Text-heavy', 'Text-only', 'Image-only'];
+  const colors = ['#f97316', '#34d399', '#60a5fa', '#f87171', '#a78bfa'];
+  const counts = types.reduce((acc, t) => { acc[t] = 0; return acc; }, {});
+  posts.forEach(p => {
+    const t = p.contentType || 'Text-only';
+    if (counts.hasOwnProperty(t)) counts[t]++;
+    else counts[t] = (counts[t] || 0) + 1;
+  });
+
+  const labels = types.filter(t => counts[t] > 0);
+  const data = labels.map(l => counts[l]);
+  const total = data.reduce((s, v) => s + v, 0);
+
+  const canvas = document.getElementById('pieContentType');
+  if (!canvas) return null;
+  const ctx = canvas.getContext('2d');
+
+  // destroy previous chart on this canvas if present
+  try {
+    const existing = Chart.getChart(ctx.canvas);
+    if (existing) existing.destroy();
+  } catch (e) { /* ignore if Chart.getChart not available */ }
+
+  const chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors.slice(0, labels.length),
+        borderColor: '#0f172a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#f0f4f8', font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: function (ctx) {
+              const label = ctx.label || '';
+              const value = ctx.parsed || 0;
+              const pct = total ? ((value / total) * 100).toFixed(1) : '0.0';
+              return `${label}: ${value} (${pct}%)`;
+            }
+          },
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          titleColor: '#ffffff',
+          bodyColor: '#d4dde8',
+          borderColor: 'rgba(148, 163, 184, 0.3)',
+          borderWidth: 1,
+          padding: 8
+        }
+      }
+    }
+  });
+
+  const tableContainer = document.getElementById('pieContentTypeTable');
+  if (tableContainer) {
+    const rows = labels.map((lbl, i) => {
+      const value = counts[lbl];
+      const pct = total ? ((value / total) * 100).toFixed(1) : '0.0';
+      const color = colors[types.indexOf(lbl)] || '#94a3b8';
+      return `<tr>
+        <td><span style="display:inline-block;width:12px;height:12px;background:${color};border-radius:2px;margin-right:8px;"></span>${lbl}</td>
+        <td style="text-align:right;padding-left:12px">${value}</td>
+        <td style="text-align:right;padding-left:12px">${pct}%</td>
+      </tr>`;
+    }).join('');
+
+    tableContainer.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;margin-top:8px;color:#d4dde8;font-size:13px">
+        <thead>
+          <tr><th style="text-align:left;padding-bottom:6px">Type</th><th style="text-align:right;padding-left:12px;padding-bottom:6px">Count</th><th style="text-align:right;padding-left:12px;padding-bottom:6px">%</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  return chart;
+}
+
+
 export function renderEngagementByContentType(posts) {
   const ctx = document.getElementById('chartEngagementContentType').getContext('2d');
   const data = computeEngagementByContentType(posts);

@@ -117,6 +117,7 @@ export function renderCards(agg, filtered) {
     <div class="card"><h4>Most Recent Post 🗓️</h4><p>${formatDate(agg.recentPost)}</p></div>
     <div class="card"><h4>Total Posts ✏️ </h4><p>${agg.postCount}</p></div>
     <div class="card"><h4>Posts / Day 📅 </h4><p>${agg.postsPerDay}</p></div>
+    <div class="card"><h4>Posts / Week 📆 </h4><p>${(agg.postsPerDay * 7).toFixed(3)}</p></div>
 
     <div class="card"><h4>Longest Streak ⏳</h4><p>${agg.longestStreak} days</p></div>
     <div class="card"><h4>Streak Period 🏃‍♂️➡️ </h4><p>${streakFrom} → ${streakTo}</p></div>
@@ -146,6 +147,8 @@ export function renderBreaksStreaksTable(posts) {
     container.innerHTML = '';
     return;
   }
+
+  
 
   // sort ascending by created
   const byAsc = [...posts].sort((a, b) => new Date(a.created) - new Date(b.created));
@@ -223,8 +226,203 @@ export function renderBreaksStreaksTable(posts) {
 
   html += `</div>`; // end flex
 
+container.innerHTML = html;
+}
+
+export function renderPeriodAnalysisTable(posts) {
+  const container = document.getElementById('periodAnalysisTable');
+  if (!container) return;
+  if (!posts || posts.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const sorted = [...posts].sort((a, b) => new Date(a.created) - new Date(b.created));
+  const firstDate = new Date(sorted[0].created);
+  const lastDate = new Date(sorted[sorted.length - 1].created);
+  const now = new Date();
+
+  const periods = [];
+
+  // Helper to create period
+  const createPeriod = (name, start, end) => {
+    const postsInPeriod = sorted.filter(p => {
+      const d = new Date(p.created);
+      return d >= start && d <= end;
+    });
+
+    if (postsInPeriod.length === 0) return null;
+
+    const wordCounts = postsInPeriod.map(p => p.wordCount);
+    const imageCounts = postsInPeriod.map(p => p.imageCount);
+    const totalWords = wordCounts.reduce((s, v) => s + v, 0);
+    const totalImages = imageCounts.reduce((s, v) => s + v, 0);
+    const totalReplies = postsInPeriod.reduce((s, p) => s + p.replies, 0);
+
+    const readabilityDist = {};
+    const contentTypeDist = {};
+    
+    postsInPeriod.forEach(p => {
+      const level = p.readability.explainer;
+      readabilityDist[level] = (readabilityDist[level] || 0) + 1;
+      
+      const type = p.contentType;
+      contentTypeDist[type] = (contentTypeDist[type] || 0) + 1;
+    });
+
+const daysDiff = Math.max(1, (end - start) / (1000 * 60 * 60 * 24));
+    const postsPerDay = (postsInPeriod.length / daysDiff).toFixed(3);
+    const postsPerWeek = (postsPerDay * 7).toFixed(3);
+
+    return {
+      name,
+      startDate: start,
+      endDate: end,
+      postCount: postsInPeriod.length,
+      totalWords,
+      avgWords: (totalWords / postsInPeriod.length).toFixed(2),
+      minWords: Math.min(...wordCounts),
+      maxWords: Math.max(...wordCounts),
+      totalReplies,
+      avgReplies: (totalReplies / postsInPeriod.length).toFixed(2),
+      totalImages,
+      avgImages: (totalImages / postsInPeriod.length).toFixed(2),
+      minImages: Math.min(...imageCounts),
+      maxImages: Math.max(...imageCounts),
+      postsPerDay,
+      postsPerWeek,
+      readabilityDist,
+      contentTypeDist
+    };
+  };
+
+  // First week
+  const weekEnd = new Date(firstDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const firstWeek = createPeriod('First Week', firstDate, weekEnd);
+  if (firstWeek) periods.push(firstWeek);
+
+  // First month
+  const monthEnd = new Date(firstDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const firstMonth = createPeriod('First Month', firstDate, monthEnd);
+  if (firstMonth) periods.push(firstMonth);
+
+  // First 6 months
+  const sixMonthEnd = new Date(firstDate.getTime() + 180 * 24 * 60 * 60 * 1000);
+  const first6Months = createPeriod('First 6 Months', firstDate, sixMonthEnd);
+  if (first6Months) periods.push(first6Months);
+
+  // First year and subsequent years
+  const firstYear = firstDate.getFullYear();
+  const currentYear = lastDate.getFullYear();
+  
+  for (let year = firstYear; year <= currentYear; year++) {
+    const yearStart = year === firstYear ? firstDate : new Date(year, 0, 1);
+    const yearEnd = year === currentYear ? lastDate : new Date(year, 11, 31, 23, 59, 59);
+    const yearPeriod = createPeriod(year === firstYear ? 'First Year' : `Year ${year}`, yearStart, yearEnd);
+    if (yearPeriod) periods.push(yearPeriod);
+  }
+
+  // Last 6 months
+  const last6MonthsStart = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  const last6Months = createPeriod('Last 6 Months', last6MonthsStart, now);
+  if (last6Months) periods.push(last6Months);
+
+  // Last month
+  const lastMonthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const lastMonth = createPeriod('Last Month', lastMonthStart, now);
+  if (lastMonth) periods.push(lastMonth);
+
+  // Last week
+  const lastWeekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const lastWeek = createPeriod('Last Week', lastWeekStart, now);
+  if (lastWeek) periods.push(lastWeek);
+
+  // Readability colors matching your existing scheme
+  const readabilityColors = {
+    'Elementary': '#60a5fa',
+    'Middle School': '#34d399',
+    'High School': '#fbbf24',
+    'College': '#fb923c',
+    'University': '#f87171',
+    'Post-Graduate': '#a78bfa',
+    'Professional': '#94a3b8'
+  };
+
+  // Content type colors matching your existing scheme
+  const contentTypeColors = {
+    'Image-heavy': '#f97316',
+    'Balanced': '#34d399',
+    'Text-heavy': '#60a5fa',
+    'Text-only': '#f87171',
+    'Image-only': '#a78bfa'
+  };
+
+  const createDistributionBar = (dist, colors) => {
+    const total = Object.values(dist).reduce((s, v) => s + v, 0);
+    if (total === 0) return '<div class="distribution-bar-container"></div>';
+    
+    let html = '<div class="distribution-bar-container">';
+    Object.entries(dist).forEach(([key, count]) => {
+      const pct = (count / total) * 100;
+      const color = colors[key] || '#94a3b8';
+      html += `<div class="distribution-segment" style="width:${pct}%; background:${color}" title="${key}: ${count} (${pct.toFixed(1)}%)"></div>`;
+    });
+    html += '</div>';
+    return html;
+  };
+
+  let html = '<div class="period-analysis-wrapper"><h4 style="text-align:center; margin-bottom: 12px;">Period Analysis</h4>';
+  html += '<table class="period-analysis-table">';
+  html += `<thead><tr>
+    <th>Period</th>
+    <th>Start Date</th>
+    <th>End Date</th>
+    <th>Posts</th>
+    <th>Posts/Day</th>
+    <th>Posts/Week</th>
+    <th>Total Words</th>
+    <th>Avg Words</th>
+    <th>Min Words</th>
+    <th>Max Words</th>
+    <th>Total Replies</th>
+    <th>Avg Replies</th>
+    <th>Total Images</th>
+    <th>Avg Images</th>
+    <th>Min Images</th>
+    <th>Max Images</th>
+    <th>Readability Distribution</th>
+    <th>Content Type Distribution</th>
+  </tr></thead>`;
+  
+  html += '<tbody>';
+  periods.forEach(p => {
+    html += `<tr>
+      <td style="white-space:nowrap"><strong>${p.name}</strong></td>
+      <td style="white-space:nowrap">${formatDate(p.startDate)}</td>
+      <td style="white-space:nowrap">${formatDate(p.endDate)}</td>
+      <td style="text-align:right">${p.postCount}</td>
+      <td style="text-align:right">${p.postsPerDay}</td>
+      <td style="text-align:right">${p.postsPerWeek}</td>
+      <td style="text-align:right">${p.totalWords}</td>
+      <td style="text-align:right">${p.avgWords}</td>
+      <td style="text-align:right">${p.minWords}</td>
+      <td style="text-align:right">${p.maxWords}</td>
+      <td style="text-align:right">${p.totalReplies}</td>
+      <td style="text-align:right">${p.avgReplies}</td>
+      <td style="text-align:right">${p.totalImages}</td>
+      <td style="text-align:right">${p.avgImages}</td>
+      <td style="text-align:right">${p.minImages}</td>
+      <td style="text-align:right">${p.maxImages}</td>
+      <td>${createDistributionBar(p.readabilityDist, readabilityColors)}</td>
+      <td>${createDistributionBar(p.contentTypeDist, contentTypeColors)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+
   container.innerHTML = html;
 }
+
+// ...existing code...
 
 // ...existing code...
 

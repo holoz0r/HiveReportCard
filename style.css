@@ -211,6 +211,36 @@ button.primary:hover {
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.15);
 }
+
+.period-analysis-table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 800px;
+}
+
+.period-analysis-wrapper {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.distribution-bar-container {
+  display: flex;
+  width: 200px;
+  height: 20px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.distribution-segment {
+  height: 100%;
+  transition: opacity 0.2s;
+}
+
+.distribution-segment:hover {
+  opacity: 0.8;
+}
 .table-wrap th {
   background: rgba(30, 41, 59, 0.8);
   padding:12px;

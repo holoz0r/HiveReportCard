@@ -26,6 +26,7 @@ export async function fetchAuthoredPosts(username, mode, statusCallback) {
       if (c.author !== username) continue;
       if (c.permlink && /hive-\d{6}$/.test(c.permlink)) continue;
       if (c.body && c.body.includes('Posted via <a href="https://d.buzz" data-link="promote-link">D.Buzz</a>')) continue;
+      if (c.body && c.body.startsWith('This is a cross post of [')) continue;
       const key = `${c.author}/${c.permlink}`;
       if (seen.has(key)) continue;
       seen.add(key);

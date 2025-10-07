@@ -34,6 +34,7 @@ import {
   exportJSON,
   exportChartByCanvasId,
   renderBreaksStreaksTable,
+   renderPeriodAnalysisTable,
   resetZoom
 } from './ui.js';
 
@@ -143,6 +144,7 @@ function renderAll() {
   const agg = computeAggregates(filtered);
   renderCards(agg, filtered);
   renderBreaksStreaksTable(filtered);
+  renderPeriodAnalysisTable(filtered);
 
   chartPerPost = renderPerPostChartAggregated(
     filtered, 

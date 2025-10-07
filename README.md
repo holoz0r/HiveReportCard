@@ -4,106 +4,78 @@
 
 ## [Use the Tool Here](https://holoz0r.github.io/HiveReportCard/)
 
-<h3>Introduction</h3>
+I am writing this post so that I have more up to date documentation for the Hive Report Card. I am now in a state where I am happy with the implemented features. I thank the members of the Hive Blockchain for their support and enthusiasm for this tool. If you wish to express this, you can support [my witness node](https://vote.hive.uno/@holoz0r).
 
-Hello! Over the last few months, I have been conducting some analytics the quality of content on HIVE. As no one author can be directly compared to another, because we all have our unique styles and posting niches, I have instead decided to build a tool that has many use cases. 
+# [Link to Hive Report Card](https://holoz0r.github.io/HiveReportCard/)
 
-Load the page, type in a username. Press a button. You can Fetch All the Posts made by a user, or just the last 100. For accounts with a long history of posting, like mine, it takes a while to gather the content from HIVE API end points. 
+# Features
 
-In summary, this tool presents: 
+### Summary Cards (Improved!) 
 
-- An Author Overview
-- Post length timeline
-- Posting Trends
-- Words Published Over Time
-- Readability over Time 
-- Readability Distribution
-- Word Count Distribution
-- Post Archive, filterable by Reading Level
-- Export Functions for further analysis 
-
-<h3>Use Cases for This Tool</h3>
-
-I envision that this tool can be used by those seeking to improve their own writing (by making it easier to understand) - or to review prior content in a bid to understand their writing styles and methods more deeply. 
-
-Other use cases exist for curation - has the author seen a sudden uptick in readability, content length, or have they taken a long break from Hive? 
-
-<h1>Tool Components</h1>
-
-<h3>Author Overview</h3>
-
-Once the data is retrieved you get a neat little scorecard: 
+Results below are from my own account: 
 
 
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/Enyo1Z3tE3ojVaw1fu2YHm7v8mncsUcuqg9i9Re1nz9UzqxXeh4C3hmRkiNgVqfELSe.png)
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23swgEdcC6bhNsPX5euWirms4YGwrjH9AjLX3wBydccGcKF6guhjzZJdcK1NMTQ4ZughN.png)
 
-This is not a dashboard about *earning*. This is a dashboard of publishing activity, and how "sticky" the user is to the Hive Platform. You can see the date of the first post, the most recent post - and a number of other things.
+You will notice that there are now emojis, content classification, and a new metric - posts per week!  
 
-The Total Number of Posts the User has made. How many posts per day? 
+Astute observers will also notice that the word count calculation is improved. This was due to some bugs in the regex that was counting words. 
 
-What was the longest uninterrupted streak of posting? When was it? Did they take a break from posting? How long was their longest break? 
+#### Top 5 Longest Breaks and Streaks (New!)
 
-How many total words have they published to the chain? How many average words? How many images? How many images per post? How many words per picture? How many pictures per word? 
+Interested to know when you were idle or super active? You can now go tell! 
 
-All these questions are answered. You can see my data above :) 
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23swg9tWUVzET3kxESeY1er6s6tmFJiAbbwmxt8SeKKQHt5QZLGVdgpWJzpqUby9i6Ya9.png)
 
-The next section is about the trend of posts.
+#### Analytics by Period (NEW!!!)
 
-<h3>Post Content Summary</h3>
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tGRVKmER4EQYb1KRp4tbhmQ9gWjUnxApmv5rPK5nNz6QcmTBLbXqG15sw2DFL5hdBWD.png)
-
-You can see that with a <em>long</em> list of posts, the chart gets very busy, but at a glance, I published a lot of images (compared to words) in 2021, which lines up with when I was able to go off and pursue my photography as the world opened up again.
-
-<h3>Posting Trends</h3>
-
-What days, years, months, and hours of the day has the user been active? 
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/EoCYtFFeRCcMFUnBwMjeE57NXw4crTBdX78gP8cP1RuPHusPExCx2ovFzgzv6obqHyZ.png)
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tRtHkkPwgy9BZzDYFanA9YZoYv1LFyeXwfhbi9whqMViQG4bUNGt6Utsz2wUsHBHp8L.png)
-
-<h3>Word Count Mountain &  Readability</h3>
-
-I've *nearly* published a million words to HIVE. I didn't know that before this tool.
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23t76y74Xd3Zyb2dp4kfetWbkBZjcB49ipypj4tpMCoePLTGDFJpAdm16gq4YjprDxQ6b.png)
-
-The lower chart here shows readability over time, I am pretty static, but there are some excursions where my writing is *incredibly* dense and hart to understand, being the lower numbers.
-
-<h3>Readability and Word Count</h3>
-
-The readability statistics are derived from the [Flesch Kincaid](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests) methodology of categorising content by what level of education in English a reader may require to understand the content. Simple language is good English, but we all get "flowery" and complex from time to time. 
+This table is the brainchild of @azircon , and it makes so much sense to have available, when I see it before my eyes. I struggled to understand what value it would bring at first, but now that I see it, I think it speaks for itself. 
 
 
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tRvZxB5RbpjsbKWrf18HwXh9j5oLVCy1gxPkpJ3WXGykCwcQxmZ4fZ7ES9T9qAZJLAx.png)
-
-How this is actually calculated is summarised by the following screenshot from WikiPedia: 
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23uExFjPH7xn6eg2wwfFRJ1xevr2ovkQ8Fjb93suYA37vk86uJcv4wSagxHmBExTzSAmn.png)
 
 
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tmjgGNGmMePfBoq49fPwAd6ApwkibyA8bK9tpoTLJUW35aFEEGDRePjLxuGrc22Lggg.png)
+This feature will prove very valuable for onboarding projects and people who refer people to HIVE, as they will be able to keep a close eye on the activity of their new users, or the users they are helping to foster.
+
+#### Words and Images Per Post (Filtering by Time Periods)
+
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23xKEPWFQ81wHnP19kGBKENwGiiKH2oy7FLwhiBM2TMVsE1in9UDzsmjrJo9eT6Y44Q46.png)
+
+You can now zoom into the charts that have a time series, and change the resolution by Day,Week,Month or Year. 
+
+If you prefer to see them as cards, that is implemented as well. 
+
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tRrLwXnxBMyUkmer3rr7KzTwYTwJhxSRQa5ieyBoakRsvtdHDUYixtDvxScwCJR6YBX.png)
+
+#### More Chart Zoom and filtering by time period
+
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tRtacVybahEPZb2Euf3AB8gSteJMfYtZ3tNDHaZPF68s7d1Nsqo7FSvMfCqFWBru4mV.png)
+
+#### Engagement by Various Metrics
+
+Take a look and see which of your posts gather the most engagement based on their readability, word count, or content-type. 
 
 
-<h3> Post History</h3>
-
-The post history lists the Title, Author, Date, Time, word count (Derived by counting the number of spaces in the text) - the number of images (by counting the incidence of certain file extensions in the text), and finally, the readability score, along with a link to the post. 
-
-You can sort  by the readability level.
-
-![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tGR5HhQxVc3GW3NbiH1HPknMfQpUGAoaa4pkN165VXUpWVgtJ6Pd5iDTmadLKrdxuo3.png)
-
-You are also able to export the content for further analysis, either as a CSV or a JSON. Note that some CSV readers may fail to render columns elegantly where a post has thousands and thousands of characters / words. 
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tv48FWZUMXucdAAa2jx7n8wdzpDLPBh5xafDwnEGs9pawxkuwCE9ms4y821gjSLhZH7.png)
 
 
-<h3>[Use the tool here!](https://holoz0r.github.io/HiveReportCard/)</h3>
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tbH2xSHFLTfuCGkNtPbUH5kAbzyYsWRoAtzPsfmxjEmBKBQTh8SyF6Q57A1jkQZbSLb.png)
 
-[If you like this tool, please vote to support my witness](https://vote.hive.uno/@holoz0r). 
+
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/EoGvTVAxtQ7M1G17unrytCWhQhcea9SpJ2DJhsakvKYwkbxSQSuzJWMb9xJiY651kaG.png)
+
+#### Post Archive and Export 
+
+Ability to export your archive of posts with the data enrichment that the dashboard completes. 
+
+![image.png](https://files.peakd.com/file/peakd-hive/holoz0r/23tRrRpcUKQcmfG6fPLC1oLrKTEkcD2E7imHu5Rr8y4qBPkgsWrm1WCsFJWoruovgpepc.png)
+
+# [Link to Hive Report Card](https://holoz0r.github.io/HiveReportCard/)
+
+# Support [my witness node](https://vote.hive.uno/@holoz0r).
 
 I will **not** be making an application for DHF funding for this tool. This tool is about **content**. 
 
 For a long time I have believed that **content is what will bring value to HIVE**. 
 
 I believe that this is a tool that is simple, that anyone can use to become more aware of their own writing complexity, and see some more granularity about their HIVE blockchain history. Perhaps it will lure interested writers *to* HIVE so they can analyse their own writing.
-
-Thank you for reading. I look forward to seeing your views and trends in the comments. Share it with a friend, etc.  :) 

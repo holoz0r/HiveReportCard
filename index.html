@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
 
+
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -153,9 +154,122 @@
   <div class="canvas-wrap"><canvas id="chartEngagementContentType"></canvas></div>
   <div class="center"><button onclick="exportChartPNG(chartEngagementContentType)">Export Chart to PNG</button></div>
 </div>
+<!-- Topic Analysis Section -->
+<div class="chart-card chart-full" style="grid-column: 1 / 3;">
+  <h3>📊 Topic Analysis</h3>
+  <p style="font-size: 13px; color: #94a3b8; margin-top: -8px;">
+    Automatically detected topics based on content analysis
+  </p>
+  <div id="topicStatsTable" class="table-wrap" style="margin-top: 12px;"></div>
+</div>
+
+<div class="chart-card">
+  <h3>Topic Distribution</h3>
+  <div class="pie-block">
+    <canvas id="pieTopics" width="360" height="220"></canvas>
+  </div>
+</div>
+
+<div class="chart-card">
+  <h3>Topic Engagement</h3>
+  <div class="canvas-wrap"><canvas id="chartTopicEngagement"></canvas></div>
+</div>
+
+<div class="chart-card chart-full">
+  <h3>Topics Over Time</h3>
+  <div class="canvas-wrap"><canvas id="chartTopicTimeline"></canvas></div>
+  <div class="center" style="margin-top: 12px;">
+    <button onclick="exportChartByCanvasId('chartTopicTimeline')">Export to PNG</button>
+  </div>
+</div>
+<!-- Vocabulary Analysis Section -->
+<div class="chart-card chart-full" style="grid-column: 1 / 3;">
+  <h3>📚 Vocabulary Analysis</h3>
+  <p style="font-size: 13px; color: #94a3b8; margin-top: -8px;">
+    Comprehensive analysis of writing vocabulary and linguistic patterns
+  </p>
+  <div class="card-grid" id="vocabularyCards" style="margin-top: 12px;"></div>
+</div>
+
+<div class="chart-card chart-full">
+  <h3>Vocabulary Growth Over Time</h3>
+  <div class="canvas-wrap"><canvas id="chartVocabGrowth"></canvas></div>
+  <div class="center" style="margin-top: 12px;">
+    <button onclick="exportChartByCanvasId('chartVocabGrowth')">Export to PNG</button>
+  </div>
+</div>
+
+<div class="chart-card">
+  <h3>Most Used Words</h3>
+  <div class="canvas-wrap"><canvas id="chartWordFreq"></canvas></div>
+</div>
+
+<div class="chart-card">
+  <h3>Word Length Distribution</h3>
+  <div class="canvas-wrap"><canvas id="chartWordLength"></canvas></div>
+</div>
+
+<div class="chart-card chart-full">
+  <h3>Vocabulary by Year</h3>
+  <div class="canvas-wrap"><canvas id="chartVocabByYear"></canvas></div>
+</div>
+<!-- Voice & Writing Quality Analysis -->
+<div class="chart-card chart-full" style="grid-column: 1 / 3;">
+  <h3>✍️ Voice & Writing Quality Analysis</h3>
+  <p style="font-size: 13px; color: #94a3b8; margin-top: -8px;">
+    Analysis of active vs passive voice, filler words, and adverb usage
+  </p>
+  <div class="card-grid" id="voiceCards" style="margin-top: 12px;"></div>
+</div>
+
+<div class="chart-card">
+  <h3>Active vs Passive Voice</h3>
+  <div class="pie-block">
+    <canvas id="pieVoice" width="360" height="220"></canvas>
+  </div>
+  <div style="margin-top:12px;padding:12px;background:rgba(15,23,42,0.4);border-radius:8px;font-size:12px;color:#cbd5e1">
+    <strong>💡 Why Active Voice Matters:</strong><br>
+    Active voice makes writing more direct and engaging. "The cat chased the mouse" (active) is clearer than "The mouse was chased by the cat" (passive). Active voice strengthens your message and keeps readers engaged.
+  </div>
+</div>
+
+<div class="chart-card">
+  <h3>Engagement by Voice Type</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementVoice"></canvas></div>
+</div>
+
+<div class="chart-card">
+  <h3>Engagement by Filler Word Density</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementFiller"></canvas></div>
+  <div style="margin-top:12px;padding:12px;background:rgba(15,23,42,0.4);border-radius:8px;font-size:12px;color:#cbd5e1">
+    <strong>🚫 Why Filler Words Weaken Writing:</strong><br>
+    Words like "really", "very", "just", "actually" add little meaning and dilute your message. Instead of "really important", use "crucial". Instead of "very good", use "excellent". Precise language is more impactful.
+  </div>
+</div>
+
+<div class="chart-card">
+  <h3>Engagement by Adverb Density</h3>
+  <div class="canvas-wrap"><canvas id="chartEngagementAdverb"></canvas></div>
+  <div style="margin-top:12px;padding:12px;background:rgba(15,23,42,0.4);border-radius:8px;font-size:12px;color:#cbd5e1">
+    <strong>📉 Why Adverbs Weaken Writing:</strong><br>
+    Adverbs (words ending in -ly) often signal weak verbs. "Walked quickly" becomes "rushed" or "sprinted". "Said loudly" becomes "shouted". Strong verbs eliminate the need for adverbs and create vivid, powerful writing.
+  </div>
+</div>
       </div>
 
       <div class="export-row">
+        <div class="export-row">
+  <!-- Add this new div for topic filters -->
+  <div id="topicFilters" class="post-filters" style="margin-bottom: 8px;"></div>
+  
+ 
+  
+  <!-- Existing export buttons -->
+  <div id="exportBtns" class="hidden">
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="exportJSON()">Export JSON</button>
+  </div>
+</div>
         <div class="post-filters" class="hidden">
           <label style="font-weight: 600; color: #cbd5e1; margin-right: 8px;">Filter by Level:</label>
           <button class="filter-level active" data-level="all" onclick="filterPostsByLevel('all', this)">All</button>
@@ -167,14 +281,10 @@
           <button class="filter-level" data-level="Post-Graduate" onclick="filterPostsByLevel('Post-Graduate', this)">Post-Graduate</button>
           <button class="filter-level" data-level="Professional" onclick="filterPostsByLevel('Professional', this)">Professional</button>
         </div>
-        <div id="exportBtns" class="hidden">
-          <button onclick="exportCSV()">Export CSV</button>
-          <button onclick="exportJSON()">Export JSON</button>
-        </div>
-      </div>
-
+     
       <div id="posts" class="posts">
         <h3>Posts (newest → oldest)</h3>
+        
         <div id="postsList"></div>
       </div>
     </div>

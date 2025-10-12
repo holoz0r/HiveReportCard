@@ -355,3 +355,17 @@ button.primary:hover {
 .center-text { text-align:center; }
 
 html { scroll-behavior: smooth; }
+
+.filter-topic {
+  background: #1e293b !important;
+  color: #d4dde8 !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+}
+.filter-topic.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
